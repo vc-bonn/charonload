@@ -1,0 +1,167 @@
+[project]
+name = "charonload"
+version = "0.0.1"
+authors = [{ name = "Patrick Stotko", email = "stotko@cs.uni-bonn.de" }]
+description = "CharonLoad"
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "cmake>=3.27",
+    'ninja ; platform_system != "Windows"',
+    "filelock",
+    "torch",
+    "numpy",                                       # Required internally in torch
+    "colorama>=0.4.6",
+    "pybind11-stubgen>=2.3",
+    'tomli ; python_version < "3.11"',
+    'typing-extensions ; python_version < "3.11"',
+]
+
+
+[project.optional-dependencies]
+dev = [
+    # Packaging
+    "build",
+
+    # Formatting
+    "black~=24.0",
+    "isort",
+    "docformatter",
+    "clang-format~=14.0",
+
+    # Linting
+    "ruff>=0.1",
+    "mypy",
+    "codespell",
+    "check-manifest",
+
+    # Documentation
+    "sphinx",
+    "furo",
+    "sphinx-autobuild",
+    "sphinx-autodoc-typehints",
+    "sphinx_autodoc_defaultargs",
+    "sphinx_copybutton",
+    "sphinx_design",
+    "sphinxcontrib-moderncmakedomain",
+    "myst-parser",
+    "docutils>=0.17",
+
+    # Tests
+    "pytest",
+    "pytest-datadir",
+    "pytest-cov",
+    "pytest-mock",
+    "packaging",
+
+    # Other
+    "nox",
+]
+
+
+[build-system]
+requires = ["setuptools>=64.0"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.black]
+line-length = 120
+
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+py_version = 38
+
+
+[tool.docformatter]
+wrap-summaries = 120
+wrap-descriptions = 120
+pre-summary-newline = true
+tab-width = 4
+black = true
+syntax = "numpy"
+
+
+[tool.ruff]
+line-length = 120
+select = ["ALL"]
+ignore = [
+    # General rules
+    "C90", # mccabe
+    # Specific rules
+    "COM812",  # trailing-comma-missing
+    "PLR0912", # too-many-branches
+    "PLR0913", # too-many-args
+    "PLR0915", # too-many-statements
+]
+src = ["src"]
+show-source = true
+typing-modules = ["charonload._compat.typing"]
+
+
+[tool.ruff.per-file-ignores]
+"src/charonload/__init__.py" = [
+    "E402", # module-import-not-at-top-of-file
+    "D",    # pydocstyle
+]
+"src/charonload/_runner.py" = [
+    "S603", # subprocess-without-shell-equals-true
+]
+"src/charonload/pybind11_stubgen/*" = [
+    "D", # pydocstyle
+]
+"tests/*" = [
+    "D",     # pydocstyle
+    "S101",  # assert-used
+    "INP",   # flake8-no-pep420
+    "PT011", # raises-too-broad
+]
+"docs/conf.py" = [
+    "D100", # undocumented-public-module
+    "INP",  # flake8-no-pep420
+    "ERA",  # eradicate
+]
+"tools/create_cmake_version_file.py" = [
+    "D",    # pydocstyle
+    "INP",  # flake8-no-pep420
+    "S603", # subprocess-without-shell-equals-true
+]
+"noxfile.py" = [
+    "D100", # undocumented-public-module
+]
+
+
+[tool.ruff.pydocstyle]
+convention = "numpy"
+
+
+[tool.coverage.run]
+branch = true
+omit = ["*/_compat/*"]
+
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+
+
+[tool.mypy]
+plugins = ["numpy.typing.mypy_plugin"]
+warn_return_any = true
+warn_unused_configs = true
+pretty = true
+ignore_missing_imports = true          # This could be made local for the tests
+
+
+[tool.check-manifest]
+ignore = [
+    ".vscode/**/*",
+    "docs/**/*",
+    "tests/**/*",
+    "tools/**/*",
+    ".clang-format",
+    "CHANGELOG.md",
+    "noxfile.py",
+]

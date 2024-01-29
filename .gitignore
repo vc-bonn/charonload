@@ -1,0 +1,20 @@
+# General
+__pycache__/
+.*_cache/
+*.py[cod]
+build/
+dist/
+src/charonload.egg-info/
+typings/
+
+# Documentation
+docs/_autosummary
+
+# Coverage
+.coverage*
+
+# Tools
+.nox/
+
+# VS Code
+*.code-workspace
