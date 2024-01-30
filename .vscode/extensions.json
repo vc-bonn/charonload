@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "benjamin-simmonds.pythoncpp-debug",
+        "ms-vscode.cpptools-extension-pack",
+    ]
+}
