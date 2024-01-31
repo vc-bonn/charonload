@@ -40,27 +40,25 @@ def _run(
     # Windows: Use windll instead of cdll call strategy since GetConsoleOutputCP is flagged with WINAPI/__stdcall
     encoding = "utf-8" if platform.system() != "Windows" else f"cp{ctypes.windll.kernel32.GetConsoleOutputCP()}"  # type: ignore[attr-defined]
 
-    p = subprocess.Popen(
+    with subprocess.Popen(
         command_args,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         encoding=encoding,
-    )
-    assert p.stdout is not None  # noqa: S101
+    ) as p:
+        assert p.stdout is not None  # noqa: S101
 
-    p_output = io.StringIO()
-    _incrementally_read_text_stream(
-        input_stream=p.stdout,
-        output_streams=[sys.stdout] if verbose else [p_output],
-    )
-
-    return_code = p.wait()
+        p_output = io.StringIO()
+        _incrementally_read_text_stream(
+            input_stream=p.stdout,
+            output_streams=[sys.stdout] if verbose else [p_output],
+        )
 
     if verbose:
         print(f"{colorama.Style.RESET_ALL}", end="")  # noqa: T201
 
     return (
-        _StepStatus.SUCCESSFUL if return_code == 0 else _StepStatus.FAILED,
+        _StepStatus.SUCCESSFUL if p.returncode == 0 else _StepStatus.FAILED,
         None if verbose else p_output.getvalue(),
     )
 
