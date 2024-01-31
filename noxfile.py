@@ -130,7 +130,7 @@ def lint(session: nox.Session) -> None:
         failed = True
 
     try:
-        session.run("ruff", *sources, external=True)
+        session.run("ruff", "check", *sources, external=True)
     except nox.command.CommandFailed:
         failed = True
 
@@ -169,7 +169,7 @@ def lint(session: nox.Session) -> None:
 @nox.session
 def tests(session: nox.Session) -> None:
     """Run the unit tests."""
-    session.run("pytest", "tests", external=True)
+    session.run("pytest", external=True)
 
 
 @nox.session
@@ -181,7 +181,6 @@ def coverage(session: nox.Session) -> None:
             "--cov=src/charonload",
             "--cov-report=term",
             "--cov-report=html:build/test_coverage/html",
-            "tests",
             external=True,
         )
     finally:
