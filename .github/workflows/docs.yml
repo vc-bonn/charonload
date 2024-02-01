@@ -1,12 +1,17 @@
 name: Docs
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
 
   pull_request:
     types: [opened, reopened, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -23,9 +28,10 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+          cache-dependency-path: '**/*requirements.txt'
 
       - name: Install torch CPU-only version
-        run: python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+        run: python -m pip install -r .github/torch_cpu_requirements.txt
 
       - name: Install charonload
         run: python -m pip install --editable ".[dev]"

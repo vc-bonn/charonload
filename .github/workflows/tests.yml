@@ -8,6 +8,10 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   tests:
     strategy:
@@ -27,9 +31,10 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: 'pip'
+          cache-dependency-path: '**/*requirements.txt'
 
       - name: Install torch CPU-only version
-        run: python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+        run: python -m pip install -r .github/torch_cpu_requirements.txt
 
       - name: Install charonload
         run: python -m pip install --editable ".[dev]"
