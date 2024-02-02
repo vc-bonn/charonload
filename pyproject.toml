@@ -31,7 +31,7 @@ dev = [
     "clang-format~=14.0",
 
     # Linting
-    "ruff>=0.1",
+    "ruff>=0.2",
     "mypy",
     "codespell",
     "check-manifest",
@@ -87,10 +87,11 @@ syntax = "numpy"
 [tool.ruff]
 src = ["src"]
 line-length = 120
-show-source = true
+output-format = "full"
 
 
 [tool.ruff.lint]
+preview = false
 select = ["ALL"]
 ignore = [
     # General rules
