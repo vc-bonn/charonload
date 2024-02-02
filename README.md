@@ -66,33 +66,25 @@ CharonLoad only requires minimal changes to existing projects. In particular, a 
 - `<your_project>/main.py`
   
     ```python
-    # Add configuration somewhere at the top of the project
     import charonload
 
-    # Set optional path to stub directory, by default "typings" relative to the project root in VS Code
     VSCODE_STUBS_DIRECTORY = pathlib.Path(__file__).parent / "typings"
 
     charonload.module_config["my_cpp_cuda_ext"] = charonload.Config(
-        # All paths must be absolute
         project_directory=pathlib.Path(__file__).parent / "<my_cpp_cuda_ext>",
-        build_directory="optional/build/directory/for/caching",
-        stubs_directory=VSCODE_STUBS_DIRECTORY,
+        build_directory="custom/build/directory",  # optional
+        stubs_directory=VSCODE_STUBS_DIRECTORY,  # optional
     )
 
-    # From now on, "my_cpp_cuda_ext" can be used in this module and any other imported module
     import other_module
-    # ...
     ```
 
 - `<your_project>/other_module.py`
   
     ```python
-    # This import compiles and loads the C++/CUDA extension just-in-time (JIT)
-    import my_cpp_cuda_ext
+    import my_cpp_cuda_ext  # JIT compiles and loads the extension
 
-    # All defined bindings of "my_cpp_cuda_ext" can now be used ...
-    # This will have proper syntax highlighting and auto-completion in VS Code if stubs are generated
-    print(my_cpp_cuda_ext.some_function())
+    tensor_from_ext = my_cpp_cuda_ext.generate_tensor()
     ```
 
 - `<your_project>/<my_cpp_cuda_ext>/CMakeLists.txt`
@@ -103,10 +95,8 @@ CharonLoad only requires minimal changes to existing projects. In particular, a 
     if(charonload_FOUND)
         charonload_add_torch_library(${TORCH_EXTENSION_NAME} MODULE)
 
-        # Add source files containing Python bindings, etc.
         target_sources(${TORCH_EXTENSION_NAME} PRIVATE src/<my_bindings>.cpp)
-
-        # Add further properties to the target, e.g. link against other libraries, etc.
+        # Further properties, e.g. link against other 3rd-party libraries, etc.
         # ...
     endif()
     ```
@@ -116,18 +106,18 @@ CharonLoad only requires minimal changes to existing projects. In particular, a 
     ```cpp
     #include <torch/python.h>
 
+    torch::Tensor generate_tensor();  // Implemented somewhere in <my_cpp_cuda_ext>
+
     PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
     {
-        // Define some bindings which can take PyTorch tensors as input and output.
-        // ...
-        m.def("some_function", &some_function, "Documentation of some_function");
+        m.def("generate_tensor", &generate_tensor, "Optional Python docstring");
     }
     ```
 
 
 ## Contributing
 
-If you would like to contribute to CharonLoad, you can find more information in the Contributing guide.
+If you would like to contribute to CharonLoad, you can find more information in the [Contributing](https://vc-bonn.github.io/charonload/src/contributing.html) guide.
 
 
 ## License
