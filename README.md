@@ -1,10 +1,8 @@
+<h1 align="center">CharonLoad</h1>
+
 <!-- start readme -->
 
-# CharonLoad
-
-<!---
 <p align="center">
--->
 <a href="https://pypi.python.org/pypi/charonload">
     <img alt="PyPI - Version" src="https://img.shields.io/pypi/v/charonload">
 </a>
@@ -23,29 +21,17 @@
 <a href="https://vc-bonn.github.io/charonload">
     <img alt="Documentation" src="https://img.shields.io/badge/docs-Latest-green.svg"/>
 </a>
-<a href="https://github.com/psf/black">
-    <img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"/>
-</a>
-<a href="https://github.com/astral-sh/ruff">
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff" style="max-width:100%;">
-</a>
-<a href="https://mypy-lang.org">
-    <img alt="Checked with mypy" src="https://www.mypy-lang.org/static/mypy_badge.svg">
-</a>
-<!---
 </p>
--->
 
-## Features
 
 CharonLoad is a bridge between Python code and rapidly developed custom C++/CUDA extensions to make writing **high-performance research code** with *PyTorch* easy:
 
-- PyTorch C++ API detection and linking
-- Automatic just-in-time (JIT) compilation of the C++/CUDA part
-- Cached incremental builds and automatic clean builds
-- Full power of CMake for handling C++ dependencies
-- Python stub file generation for syntax highlighting and auto-completion in VS Code
-- Interactive mixed Python/C++ debugging support in VS Code via *Python C++ Debugger* extension
+- 🔥 PyTorch C++ API detection and linking
+- 🔨 Automatic just-in-time (JIT) compilation of the C++/CUDA part
+- 📦 Cached incremental builds and automatic clean builds
+- 🔗 Full power of CMake for handling C++ dependencies
+- ⌨️ Python stub file generation for syntax highlighting and auto-completion in VS Code
+- 🐛 Interactive mixed Python/C++ debugging support in VS Code via *Python C++ Debugger* extension
 
 CharonLoad reduces the burden to start writing and experimenting with custom GPU kernels in PyTorch by getting complex boilerplate code and common pitfalls out of your way. Developing C++/CUDA code with CharonLoad feels similar to writing Python scripts and lets you follow the same familiar workflow.
 
