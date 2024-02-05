@@ -2,7 +2,7 @@
 name = "charonload"
 version = "0.0.1"
 authors = [{ name = "Patrick Stotko", email = "stotko@cs.uni-bonn.de" }]
-description = "CharonLoad"
+description = "Develop C++/CUDA extensions with PyTorch like Python scripts"
 license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.8"
@@ -17,6 +17,27 @@ dependencies = [
     'tomli ; python_version < "3.11"',
     'typing-extensions ; python_version < "3.11"',
 ]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: C++",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+]
+
+[project.urls]
+Homepage = "https://github.com/vc-bonn/charonload"
+Repository = "https://github.com/vc-bonn/charonload"
+Documentation = "https://vc-bonn.github.io/charonload/"
+Changelog = "https://github.com/vc-bonn/charonload/blob/main/CHANGELOG.md"
 
 
 [project.optional-dependencies]

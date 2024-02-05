@@ -1,7 +1,6 @@
 name: Docs
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
@@ -9,15 +8,17 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
 
+  release:
+    types:
+      - published
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: write
-
 jobs:
-  Docs:
+  build:
+    name: Build
     runs-on: ubuntu-22.04
 
     steps:
@@ -39,10 +40,32 @@ jobs:
       - name: Build docs
         run: nox -s docs
 
-      - name: Deploy docs
-        uses: JamesIves/github-pages-deploy-action@v4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Docs HTML
+          path: build/docs/html
+
+  publish:
+    name: Upload release to GitHub Pages
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'release' && github.event.action == 'published'
+
+    needs:
+      - build
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: Docs HTML
+          path: build/docs/html
+
+      - uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build/docs/html
           clean: true
           single-commit: true
-        if: github.event_name != 'pull_request'
