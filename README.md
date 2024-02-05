@@ -38,10 +38,10 @@ CharonLoad reduces the burden to start writing and experimenting with custom GPU
 
 ## Installation
 
-CharonLoad requires **Python >=3.8** and can be installed from **source** (after cloning the repository):
+CharonLoad requires **Python >=3.8** and can be installed from PyPI:
 
 ```sh
-python -m pip install --editable ".[dev]"
+pip install charonload
 ```
 
 
