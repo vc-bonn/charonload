@@ -1,3 +1,4 @@
 graft src/charonload/cmake
 include src/charonload/py.typed
 exclude CMakeLists.txt
+prune tests
