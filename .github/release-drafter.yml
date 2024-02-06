@@ -5,6 +5,16 @@ template: |
 
   **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
 
+  ---
+
+  ### Release Guide
+
+  1. Bump version in `pyproject.toml`
+  2. Update corresponding CMake version by calling `tools/create_cmake_version_file.py`
+  3. Update `CHANGELOG.md` with notes from release draft and header with version and release date
+  4. Open a PR with the above changes and merge it
+  5. Release the version by editing the draft
+
 categories:
   - title: Added
     labels:
