@@ -3,7 +3,6 @@ name = "charonload"
 version = "0.1.0"
 authors = [{ name = "Patrick Stotko", email = "stotko@cs.uni-bonn.de" }]
 description = "Develop C++/CUDA extensions with PyTorch like Python scripts"
-license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
