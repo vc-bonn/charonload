@@ -17,20 +17,21 @@ dependencies = [
     'typing-extensions ; python_version < "3.11"',
 ]
 classifiers = [
-  "Development Status :: 4 - Beta",
-  "License :: OSI Approved :: MIT License",
-  "Programming Language :: C++",
-  "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Topic :: Scientific/Engineering",
-  "Topic :: Software Development :: Libraries :: Python Modules",
-  "Intended Audience :: Developers",
-  "Intended Audience :: Science/Research",
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
 ]
+
 
 [project.urls]
 Homepage = "https://github.com/vc-bonn/charonload"
@@ -73,7 +74,6 @@ dev = [
     "pytest-datadir",
     "pytest-cov",
     "pytest-mock",
-    "packaging",
 
     # Other
     "nox",
@@ -163,18 +163,11 @@ convention = "numpy"
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = [
-    "-ra",
-    "--showlocals",
-    "--strict-markers",
-    "--strict-config",
-]
+addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
 xfail_strict = true
 filterwarnings = ["error"]
 log_cli_level = "info"
-testpaths = [
-  "tests",
-]
+testpaths = ["tests"]
 
 
 [tool.coverage.run]
@@ -189,15 +182,11 @@ show_missing = true
 
 [tool.mypy]
 plugins = ["numpy.typing.mypy_plugin"]
-enable_error_code = [
-    "ignore-without-code",
-    "redundant-expr",
-    "truthy-bool",
-]
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 warn_return_any = true
 warn_unused_configs = true
 pretty = true
-ignore_missing_imports = true          # This could be made local for the tests
+ignore_missing_imports = true                                                # This could be made local for the tests
 
 
 [tool.check-manifest]
