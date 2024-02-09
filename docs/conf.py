@@ -47,7 +47,7 @@ autodoc_default_options = {
 docstring_default_arg_substitution = "*Default*: "
 autodoc_preserve_defaults = True
 
-simplify_optional_unions = False
+always_use_bars_union = True
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
