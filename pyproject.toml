@@ -61,7 +61,7 @@ dev = [
     "sphinx",
     "furo",
     "sphinx-autobuild",
-    "sphinx-autodoc-typehints",
+    "sphinx-autodoc-typehints>=2.0",
     "sphinx_autodoc_defaultargs",
     "sphinx_copybutton",
     "sphinx_design",
