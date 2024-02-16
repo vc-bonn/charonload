@@ -35,7 +35,6 @@ def _run(
             f"{colorama.Fore.GREEN}{colorama.Style.BRIGHT}Running: "
             f'{colorama.Style.NORMAL}"{command}"{colorama.Style.RESET_ALL}'
         )
-        print(f"{colorama.Style.BRIGHT}", end="")  # noqa: T201
 
     # Windows: Use windll instead of cdll call strategy since GetConsoleOutputCP is flagged with WINAPI/__stdcall
     encoding = "utf-8" if platform.system() != "Windows" else f"cp{ctypes.windll.kernel32.GetConsoleOutputCP()}"  # type: ignore[attr-defined]
@@ -53,9 +52,6 @@ def _run(
             input_stream=p.stdout,
             output_streams=[sys.stdout] if verbose else [p_output],
         )
-
-    if verbose:
-        print(f"{colorama.Style.RESET_ALL}", end="")  # noqa: T201
 
     return (
         _StepStatus.SUCCESSFUL if p.returncode == 0 else _StepStatus.FAILED,
