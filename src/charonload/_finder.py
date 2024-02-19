@@ -93,6 +93,9 @@ def _load(module_name: str, config: Config) -> None:
         if config.verbose:
             print(f"Acquiring lock (pid={multiprocessing.current_process().pid}) ... done.")  # noqa: T201
 
+        with (config.full_build_directory / ".gitignore").open("w") as f:
+            f.write("*")
+
         step_classes: list[type[_JITCompileStep]] = [
             _CleanStep,
             _CMakeConfigureStep,
@@ -160,7 +163,7 @@ class _CleanStep(_JITCompileStep):
         should_clean = [clean_if_failed[step] and failed for step, failed in step_failed.items()]
 
         if self.config.clean_build or self.cache.get("version", _version()) != _version() or any(should_clean):
-            self._recursive_remove(self.config.full_build_directory, exclude_patterns=["build.lock"])
+            self._recursive_remove(self.config.full_build_directory, exclude_patterns=["build.lock", ".gitignore"])
 
     def _recursive_remove(self: Self, directory: pathlib.Path, exclude_patterns: list[str]) -> None:
         for file in sorted(directory.rglob("*")):
