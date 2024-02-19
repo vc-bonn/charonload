@@ -73,3 +73,20 @@ jobs:
           path: dist
 
       - uses: pypa/gh-action-pypi-publish@release/v1
+
+  check_pypi:
+    if: always()
+
+    needs:
+      - dist
+      - publish-test
+      - publish
+
+    name: "Check PyPI"
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: re-actors/alls-green@release/v1
+      with:
+        allowed-skips: publish-test, publish
+        jobs: ${{ toJSON(needs) }}

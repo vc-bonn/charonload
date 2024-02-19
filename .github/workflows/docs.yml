@@ -69,3 +69,19 @@ jobs:
           folder: build/docs/html
           clean: true
           single-commit: true
+
+  check_docs:
+    if: always()
+
+    needs:
+      - build
+      - publish
+
+    name: "Check Docs"
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: re-actors/alls-green@release/v1
+      with:
+        allowed-skips: publish
+        jobs: ${{ toJSON(needs) }}
