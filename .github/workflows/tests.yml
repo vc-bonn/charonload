@@ -46,3 +46,17 @@ jobs:
         run: |
           cmake -S tests/cpp_only_project -B build/cpp_only_project
           cmake --build build/cpp_only_project --parallel
+
+  check_tests:
+    if: always()
+
+    needs:
+      - tests
+
+    name: "Check Tests"
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: re-actors/alls-green@release/v1
+      with:
+        jobs: ${{ toJSON(needs) }}
