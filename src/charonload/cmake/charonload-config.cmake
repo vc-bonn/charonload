@@ -25,7 +25,9 @@ get_filename_component(PACKAGE_PREFIX_DIR "${CMAKE_CURRENT_LIST_DIR}/../" ABSOLU
 if(CMAKE_VERSION VERSION_LESS 3.27)
     message(FATAL_ERROR "CharonLoad requires CMake 3.27+ but older version ${CMAKE_VERSION} is used instead!")
 endif()
-cmake_policy(VERSION 3.27)
+
+# Required for charonload_detect_torch_cxx_standard()
+cmake_policy(SET CMP0137 NEW)
 
 
 macro(charonload_message)
