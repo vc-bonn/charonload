@@ -443,6 +443,27 @@ def test_torch_cmake_old_policy(shared_datadir: pathlib.Path, tmp_path: pathlib.
     assert torch.equal(t_output, 2 * t_input)
 
 
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
+def test_torch_cmake_old_policy_cuda(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
+    project_directory = shared_datadir / "torch_cmake_old_policy_cuda"
+    build_directory = tmp_path / "build"
+
+    charonload.module_config["test_torch_cmake_old_policy_cuda"] = charonload.Config(
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+    )
+
+    import test_torch_cmake_old_policy_cuda as test_torch
+
+    t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cuda")
+    t_output = test_torch.two_times(t_input)
+
+    assert t_output.device == t_input.device
+    assert t_output.shape == t_input.shape
+    assert torch.equal(t_output, 2 * t_input)
+
+
 def test_torch_clean_build(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
     build_directory = tmp_path / "build"
