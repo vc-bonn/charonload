@@ -163,18 +163,19 @@ class _CleanStep(_JITCompileStep):
         should_clean = [clean_if_failed[step] and failed for step, failed in step_failed.items()]
 
         if self.config.clean_build or self.cache.get("version", _version()) != _version() or any(should_clean):
-            self._recursive_remove(self.config.full_build_directory, exclude_patterns=["build.lock", ".gitignore"])
+            for file in sorted(self.config.full_build_directory.rglob("*"), reverse=True):
+                if any(
+                    file.samefile(f)
+                    for f in [
+                        self.config.full_build_directory / "charonload" / "build.lock",
+                        self.config.full_build_directory / ".gitignore",
+                    ]
+                ):
+                    continue
 
-    def _recursive_remove(self: Self, directory: pathlib.Path, exclude_patterns: list[str]) -> None:
-        for file in sorted(directory.rglob("*")):
-            if any(file.match(ep) for ep in exclude_patterns):
-                continue
-
-            if file.is_file():
-                file.unlink()
-            elif file.is_dir():
-                self._recursive_remove(file, exclude_patterns)
-                if not any(file.iterdir()):
+                if file.is_file():
+                    file.unlink()
+                elif file.is_dir() and not any(file.iterdir()):
                     file.rmdir()
 
 

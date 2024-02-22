@@ -475,12 +475,16 @@ def test_torch_clean_build(shared_datadir: pathlib.Path, tmp_path: pathlib.Path)
         stubs_directory=VSCODE_STUBS_DIRECTORY,
     )
 
-    dirty_file = build_directory / "dirty.txt"
+    dirty_files = [
+        build_directory / "dirty.txt",
+        build_directory / "charonload" / "dirty_dir" / "charonload" / "build.lock",
+        build_directory / "non_top_level" / ".gitignore",
+    ]
 
-    build_directory.mkdir(parents=True, exist_ok=True)
-    dirty_file.touch()
-
-    assert dirty_file.exists()
+    for f in dirty_files:
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.touch()
+        assert f.exists()
 
     import test_torch_clean_build as test_torch
 
@@ -491,7 +495,8 @@ def test_torch_clean_build(shared_datadir: pathlib.Path, tmp_path: pathlib.Path)
     assert t_output.shape == t_input.shape
     assert torch.equal(t_output, 2 * t_input)
 
-    assert not dirty_file.exists()
+    for f in dirty_files:
+        assert not f.exists()
 
 
 def test_torch_clean_build_different_version(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
