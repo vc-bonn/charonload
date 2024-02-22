@@ -861,6 +861,31 @@ def test_torch_verbose(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> 
     assert torch.equal(t_output, 2 * t_input)
 
 
+def test_torch_verbose_tty(
+    shared_datadir: pathlib.Path, tmp_path: pathlib.Path, mocker: pytest_mock.MockerFixture
+) -> None:
+    mocker.patch("sys.stdout.isatty", return_value=True)
+
+    project_directory = shared_datadir / "torch_cpu"
+    build_directory = tmp_path / "build"
+
+    charonload.module_config["test_torch_verbose_tty"] = charonload.Config(
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+        verbose=True,
+    )
+
+    import test_torch_verbose_tty as test_torch
+
+    t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cpu")
+    t_output = test_torch.two_times(t_input)
+
+    assert t_output.device == t_input.device
+    assert t_output.shape == t_input.shape
+    assert torch.equal(t_output, 2 * t_input)
+
+
 def _concurrent_process_fork_import(_: Any) -> None:  # noqa: ANN401
     import concurrent_process_fork_import as test_torch
 
