@@ -45,6 +45,9 @@ charonload_message(STATUS "")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Enabled by charonload" FORCE)
 charonload_message(STATUS "Enabled CMAKE_EXPORT_COMPILE_COMMANDS: ${CMAKE_EXPORT_COMPILE_COMMANDS}")
 
+set(CMAKE_COLOR_DIAGNOSTICS ON CACHE BOOL "Enabled by charonload" FORCE)
+charonload_message(STATUS "Enabled CMAKE_COLOR_DIAGNOSTICS: ${CMAKE_COLOR_DIAGNOSTICS}")
+
 
 include(CMakeFindDependencyMacro)
 
