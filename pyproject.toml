@@ -147,10 +147,15 @@ typing-modules = ["charonload._compat.typing"]
     "INP",  # flake8-no-pep420
     "ERA",  # eradicate
 ]
+"tools/*.py" = [
+    "D",   # pydocstyle
+    "INP", # flake8-no-pep420
+]
 "tools/create_cmake_version_file.py" = [
-    "D",    # pydocstyle
-    "INP",  # flake8-no-pep420
     "S603", # subprocess-without-shell-equals-true
+]
+"tools/process_changelog.py" = [
+    "S310", # suspicious-url-open-usage
 ]
 "noxfile.py" = [
     "D100", # undocumented-public-module
