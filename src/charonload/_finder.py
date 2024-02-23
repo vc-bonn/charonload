@@ -93,11 +93,9 @@ def _load(module_name: str, config: Config) -> None:
         if config.verbose:
             print(f"Acquiring lock (pid={multiprocessing.current_process().pid}) ... done.")  # noqa: T201
 
-        with (config.full_build_directory / ".gitignore").open("w") as f:
-            f.write("*")
-
         step_classes: list[type[_JITCompileStep]] = [
             _CleanStep,
+            _InitializeStep,
             _CMakeConfigureStep,
             _BuildStep,
             _StubGenerationStep,
@@ -164,19 +162,31 @@ class _CleanStep(_JITCompileStep):
 
         if self.config.clean_build or self.cache.get("version", _version()) != _version() or any(should_clean):
             for file in sorted(self.config.full_build_directory.rglob("*"), reverse=True):
-                if any(
-                    file.samefile(f)
-                    for f in [
-                        self.config.full_build_directory / "charonload" / "build.lock",
-                        self.config.full_build_directory / ".gitignore",
-                    ]
-                ):
+                if any(file.samefile(f) for f in [self.config.full_build_directory / "charonload" / "build.lock"]):
                     continue
 
                 if file.is_file():
                     file.unlink()
                 elif file.is_dir() and not any(file.iterdir()):
                     file.rmdir()
+
+
+class _InitializeStep(_JITCompileStep):
+    exception_cls = type(None)
+
+    def __init__(self: Self, module_name: str, config: Config) -> None:
+        super().__init__(module_name, config)
+        self.cache.connect(
+            "version",
+            str,
+            self.config.full_build_directory / "charonload" / "version.txt",
+        )
+
+    def run(self: Self) -> None:
+        self.cache["version"] = _version()
+
+        with (self.config.full_build_directory / ".gitignore").open("w") as f:
+            f.write("*")
 
 
 class _CMakeConfigureStep(_JITCompileStep):
@@ -193,11 +203,6 @@ class _CMakeConfigureStep(_JITCompileStep):
             "cmake_configure_command",
             str,
             self.config.full_build_directory / "charonload" / "cmake_configure_command.txt",
-        )
-        self.cache.connect(
-            "version",
-            str,
-            self.config.full_build_directory / "charonload" / "version.txt",
         )
 
     def run(self: Self) -> None:
@@ -229,7 +234,6 @@ class _CMakeConfigureStep(_JITCompileStep):
 
         self.cache["cmake_configure_command"] = configure_command
         self.cache["status_cmake_configure"] = status
-        self.cache["version"] = _version()
         if status == _StepStatus.FAILED:
             raise self.exception_cls(log)
 
