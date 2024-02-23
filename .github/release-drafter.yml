@@ -12,8 +12,9 @@ template: |
   1. Bump version in `pyproject.toml`
   2. Update corresponding CMake version by calling `tools/create_cmake_version_file.py`
   3. Update `CHANGELOG.md` with notes from release draft and header with version and release date
-  4. Open a PR with the above changes and merge it
-  5. Release the version by editing the draft
+  4. Process links in `CHANGELOG.md` and check release date by calling `tools/process_changelog.py`
+  5. Open a PR with the above changes and merge it
+  6. Release the version by editing the draft
 
 categories:
   - title: Added
