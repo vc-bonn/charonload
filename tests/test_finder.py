@@ -464,6 +464,28 @@ def test_torch_cmake_old_policy_cuda(shared_datadir: pathlib.Path, tmp_path: pat
     assert torch.equal(t_output, 2 * t_input)
 
 
+def test_torch_gitignore(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
+    project_directory = shared_datadir / "torch_cpu"
+    build_directory = tmp_path / "build"
+
+    charonload.module_config["test_torch_gitignore"] = charonload.Config(
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+    )
+
+    import test_torch_gitignore as test_torch
+
+    t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cpu")
+    t_output = test_torch.two_times(t_input)
+
+    assert t_output.device == t_input.device
+    assert t_output.shape == t_input.shape
+    assert torch.equal(t_output, 2 * t_input)
+
+    assert (build_directory / ".gitignore").exists()
+
+
 def test_torch_clean_build(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
     build_directory = tmp_path / "build"
@@ -497,6 +519,8 @@ def test_torch_clean_build(shared_datadir: pathlib.Path, tmp_path: pathlib.Path)
 
     for f in dirty_files:
         assert not f.exists()
+
+    assert (build_directory / ".gitignore").exists()
 
 
 def test_torch_clean_build_different_version(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
