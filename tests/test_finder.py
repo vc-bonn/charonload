@@ -523,11 +523,43 @@ def test_torch_clean_build(shared_datadir: pathlib.Path, tmp_path: pathlib.Path)
     assert (build_directory / ".gitignore").exists()
 
 
-def test_torch_clean_build_different_version(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
+def test_torch_clean_build_compatible_version(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
     build_directory = tmp_path / "build"
 
-    charonload.module_config["test_torch_clean_build_different_version"] = charonload.Config(
+    charonload.module_config["test_torch_clean_build_compatible_version"] = charonload.Config(
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+    )
+
+    dirty_file = build_directory / "dirty.txt"
+
+    build_directory.mkdir(parents=True, exist_ok=True)
+    (build_directory / "charonload").mkdir(parents=True, exist_ok=True)
+    dirty_file.touch()
+    with (build_directory / "charonload" / "version.txt").open("w") as f:
+        f.write(".".join(charonload.__version__.split(".")[:-1] + ["9999"]))
+
+    assert dirty_file.exists()
+
+    import test_torch_clean_build_compatible_version as test_torch
+
+    t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cpu")
+    t_output = test_torch.two_times(t_input)
+
+    assert t_output.device == t_input.device
+    assert t_output.shape == t_input.shape
+    assert torch.equal(t_output, 2 * t_input)
+
+    assert dirty_file.exists()
+
+
+def test_torch_clean_build_incompatible_version(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
+    project_directory = shared_datadir / "torch_cpu"
+    build_directory = tmp_path / "build"
+
+    charonload.module_config["test_torch_clean_build_incompatible_version"] = charonload.Config(
         project_directory,
         build_directory,
         stubs_directory=VSCODE_STUBS_DIRECTORY,
@@ -543,7 +575,7 @@ def test_torch_clean_build_different_version(shared_datadir: pathlib.Path, tmp_p
 
     assert dirty_file.exists()
 
-    import test_torch_clean_build_different_version as test_torch
+    import test_torch_clean_build_incompatible_version as test_torch
 
     t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cpu")
     t_output = test_torch.two_times(t_input)
