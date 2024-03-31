@@ -31,7 +31,7 @@ from ._persistence import (
     _StrSerializer,
 )
 from ._runner import _run, _run_if, _StepStatus
-from ._version import _version
+from ._version import _is_compatible, _version
 
 colorama.just_fix_windows_console()
 
@@ -160,7 +160,11 @@ class _CleanStep(_JITCompileStep):
         }
         should_clean = [clean_if_failed[step] and failed for step, failed in step_failed.items()]
 
-        if self.config.clean_build or self.cache.get("version", _version()) != _version() or any(should_clean):
+        if (
+            self.config.clean_build
+            or not _is_compatible(self.cache.get("version", _version()), _version())
+            or any(should_clean)
+        ):
             for file in sorted(self.config.full_build_directory.rglob("*"), reverse=True):
                 if any(file.samefile(f) for f in [self.config.full_build_directory / "charonload" / "build.lock"]):
                     continue
