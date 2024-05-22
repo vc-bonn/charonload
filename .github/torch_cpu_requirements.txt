@@ -1,2 +1,4 @@
 --index-url https://download.pytorch.org/whl/cpu
-torch
+# torch 2.3.0 on Windows may through a DLL import error, presumably due to the newly introduced dependency to MKL:
+# https://github.com/pytorch/pytorch/issues/125109
+torch!=2.3.0+cpu
