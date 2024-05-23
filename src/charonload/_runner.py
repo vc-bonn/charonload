@@ -253,7 +253,7 @@ def _run(
     if verbose:
         command = " ".join(command_args)
         print(  # noqa: T201
-            f"{colorama.Fore.GREEN}{colorama.Style.BRIGHT}Running: "
+            f"[charonload] {colorama.Fore.GREEN}{colorama.Style.BRIGHT}Running: "
             f'{colorama.Style.NORMAL}"{command}"{colorama.Style.RESET_ALL}'
         )
 

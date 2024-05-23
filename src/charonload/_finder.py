@@ -68,12 +68,14 @@ class JITCompileFinder(importlib.abc.MetaPathFinder):
             ``None``. This defers the actual import to the built-in Python finders and loaders.
         """
         if fullname in module_config:
-            print(f"Building module {colorama.Style.BRIGHT}'{fullname}'{colorama.Style.RESET_ALL} ...")  # noqa: T201
+            print(  # noqa: T201
+                f"[charonload] Building module {colorama.Style.BRIGHT}'{fullname}'{colorama.Style.RESET_ALL} ..."
+            )
             t_start = time.perf_counter()
             _load(module_name=fullname, config=module_config[fullname])
             t_end = time.perf_counter()
             print(  # noqa: T201
-                f"Building module {colorama.Style.BRIGHT}'{fullname}'{colorama.Style.RESET_ALL} ... done. "
+                f"[charonload] Building module {colorama.Style.BRIGHT}'{fullname}'{colorama.Style.RESET_ALL} ... done. "
                 f"({t_end - t_start:.1f}s)"
             )
 
@@ -88,10 +90,10 @@ def _load(module_name: str, config: Config) -> None:
     (config.full_build_directory / "charonload").mkdir(parents=True, exist_ok=True)
     lock = filelock.FileLock(config.full_build_directory / "charonload" / "build.lock")
     if config.verbose:
-        print(f"Acquiring lock (pid={multiprocessing.current_process().pid}) ...")  # noqa: T201
+        print(f"[charonload] Acquiring lock (pid={multiprocessing.current_process().pid}) ...")  # noqa: T201
     with lock:
         if config.verbose:
-            print(f"Acquiring lock (pid={multiprocessing.current_process().pid}) ... done.")  # noqa: T201
+            print(f"[charonload] Acquiring lock (pid={multiprocessing.current_process().pid}) ... done.")  # noqa: T201
 
         step_classes: list[type[_JITCompileStep]] = [
             _CleanStep,
@@ -101,33 +103,44 @@ def _load(module_name: str, config: Config) -> None:
             _StubGenerationStep,
             _ImportPathStep,
         ]
-        steps = [cls(module_name, config) for cls in step_classes]
+        steps = [cls(module_name, config, (i + 1, len(step_classes))) for i, cls in enumerate(step_classes)]
         for s in steps:
             s.run()
 
 
 class _JITCompileStep(ABC):
     exception_cls = type(None)
+    step_name = "<None>"
 
-    def __init__(self: Self, module_name: str, config: Config) -> None:
+    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
         self.module_name = module_name
         self.config = config
+        self.step_number = step_number
 
         self.cache = _PersistentDict()
         self.cache.register_serializer(pathlib.Path, encode=_PathSerializer.encode, decode=_PathSerializer.decode)
         self.cache.register_serializer(enum.Enum, encode=_EnumSerializer.encode, decode=_EnumSerializer.decode)
         self.cache.register_serializer(str, encode=_StrSerializer.encode, decode=_StrSerializer.decode)
 
-    @abstractmethod  # pragma: no cover
     def run(self: Self) -> None:
+        if self.config.verbose:
+            print(  # noqa: T201
+                f"[charonload] {colorama.Fore.CYAN}[{self.step_number[0]}/{self.step_number[1]}]"
+                f" {colorama.Style.BRIGHT}{self.step_name}{colorama.Style.RESET_ALL}"
+            )
+        self._run_impl()
+
+    @abstractmethod  # pragma: no cover
+    def _run_impl(self: Self) -> None:
         pass
 
 
 class _CleanStep(_JITCompileStep):
     exception_cls = type(None)
+    step_name = "Clean"
 
-    def __init__(self: Self, module_name: str, config: Config) -> None:
-        super().__init__(module_name, config)
+    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+        super().__init__(module_name, config, step_number)
         self.cache.connect(
             "status_cmake_configure",
             _StepStatus,
@@ -149,7 +162,7 @@ class _CleanStep(_JITCompileStep):
             self.config.full_build_directory / "charonload" / "version.txt",
         )
 
-    def run(self: Self) -> None:
+    def _run_impl(self: Self) -> None:
         clean_if_failed = {
             "status_cmake_configure": True,
             "status_build": False,
@@ -177,16 +190,17 @@ class _CleanStep(_JITCompileStep):
 
 class _InitializeStep(_JITCompileStep):
     exception_cls = type(None)
+    step_name = "Initialize"
 
-    def __init__(self: Self, module_name: str, config: Config) -> None:
-        super().__init__(module_name, config)
+    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+        super().__init__(module_name, config, step_number)
         self.cache.connect(
             "version",
             str,
             self.config.full_build_directory / "charonload" / "version.txt",
         )
 
-    def run(self: Self) -> None:
+    def _run_impl(self: Self) -> None:
         self.cache["version"] = _version()
 
         with (self.config.full_build_directory / ".gitignore").open("w") as f:
@@ -195,9 +209,10 @@ class _InitializeStep(_JITCompileStep):
 
 class _CMakeConfigureStep(_JITCompileStep):
     exception_cls = CMakeConfigureError
+    step_name = "CMake Configure"
 
-    def __init__(self: Self, module_name: str, config: Config) -> None:
-        super().__init__(module_name, config)
+    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+        super().__init__(module_name, config, step_number)
         self.cache.connect(
             "status_cmake_configure",
             _StepStatus,
@@ -209,7 +224,7 @@ class _CMakeConfigureStep(_JITCompileStep):
             self.config.full_build_directory / "charonload" / "cmake_configure_command.txt",
         )
 
-    def run(self: Self) -> None:
+    def _run_impl(self: Self) -> None:
         configure_command_args = [
             "cmake",
             f"-DCMAKE_CONFIGURATION_TYPES={self.config.build_type}",
@@ -253,9 +268,10 @@ class _CMakeConfigureStep(_JITCompileStep):
 
 class _BuildStep(_JITCompileStep):
     exception_cls = BuildError
+    step_name = "Build"
 
-    def __init__(self: Self, module_name: str, config: Config) -> None:
-        super().__init__(module_name, config)
+    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+        super().__init__(module_name, config, step_number)
         self.cache.connect(
             "status_cmake_configure",
             _StepStatus,
@@ -267,7 +283,7 @@ class _BuildStep(_JITCompileStep):
             self.config.full_build_directory / "charonload" / "status_build.txt",
         )
 
-    def run(self: Self) -> None:
+    def _run_impl(self: Self) -> None:
         cmake_configure_passed_file = self.config.full_build_directory / "charonload" / "cmake_configure_passed.txt"
 
         status, log = _run(
@@ -293,9 +309,10 @@ class _BuildStep(_JITCompileStep):
 
 class _StubGenerationStep(_JITCompileStep):
     exception_cls = StubGenerationError
+    step_name = "Stub Generation"
 
-    def __init__(self: Self, module_name: str, config: Config) -> None:
-        super().__init__(module_name, config)
+    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+        super().__init__(module_name, config, step_number)
         self.cache.connect(
             "status_stub_generation",
             _StepStatus,
@@ -317,7 +334,7 @@ class _StubGenerationStep(_JITCompileStep):
             self.config.full_build_directory / "charonload" / self.config.build_type / "windows_dll_directories.txt",
         )
 
-    def run(self: Self) -> None:
+    def _run_impl(self: Self) -> None:
         full_extension_path: pathlib.Path = self.cache["location"]
         windows_dll_directories: str = self.cache["windows_dll_directories"]
         old_checksum: str = self.cache.get("checksum", "")
@@ -367,9 +384,10 @@ class _StubGenerationStep(_JITCompileStep):
 
 class _ImportPathStep(_JITCompileStep):
     exception_cls = type(None)
+    step_name = "Import Path"
 
-    def __init__(self: Self, module_name: str, config: Config) -> None:
-        super().__init__(module_name, config)
+    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+        super().__init__(module_name, config, step_number)
         self.cache.connect(
             "location",
             pathlib.Path,
@@ -381,7 +399,7 @@ class _ImportPathStep(_JITCompileStep):
             self.config.full_build_directory / "charonload" / self.config.build_type / "windows_dll_directories.txt",
         )
 
-    def run(self: Self) -> None:
+    def _run_impl(self: Self) -> None:
         full_extension_path: pathlib.Path = self.cache["location"]
         windows_dll_directories: str = self.cache["windows_dll_directories"]
 
