@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import importlib
+import importlib.util
 import io
 import multiprocessing
 import pathlib
@@ -23,6 +24,26 @@ if TYPE_CHECKING:
 import charonload
 
 VSCODE_STUBS_DIRECTORY = pathlib.Path(__file__).parents[1] / "typings"
+
+
+def is_test_project_installed() -> bool:
+    return importlib.util.find_spec("charonload_installed_project") is not None
+
+
+@pytest.mark.skipif(not is_test_project_installed(), reason="Pre-installed test project required")
+def test_installed_project() -> None:
+    import charonload_installed_project
+
+    config = charonload.module_config["_c_charonload_installed_project"]
+    assert config.full_build_directory not in config.full_project_directory.parents
+    assert config.full_stubs_directory not in config.full_project_directory.parents
+
+    t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cpu")
+    t_output = charonload_installed_project.two_times(t_input)
+
+    assert t_output.device == t_input.device
+    assert t_output.shape == t_input.shape
+    assert torch.equal(t_output, 2 * t_input)
 
 
 def test_torch_cpu(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:

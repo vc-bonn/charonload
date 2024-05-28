@@ -4,7 +4,7 @@ __pycache__/
 *.py[cod]
 build/
 dist/
-src/charonload.egg-info/
+*.egg-info/
 typings/
 
 # Documentation
