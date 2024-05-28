@@ -1,0 +1,11 @@
+[project]
+name = "charonload_installed_project"
+version = "0.0.1"
+authors = [{ name = "Patrick Stotko", email = "stotko@cs.uni-bonn.de" }]
+description = "Dummy project for testing charonload"
+dependencies = ["torch", "numpy", "charonload"]
+
+
+[build-system]
+requires = ["setuptools>=64.0"]
+build-backend = "setuptools.build_meta"

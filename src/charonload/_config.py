@@ -5,13 +5,18 @@ import getpass
 import hashlib
 import pathlib
 import re
+import site
 import sys
 import tempfile
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import colorama
+
 if TYPE_CHECKING:  # pragma: no cover
     from ._compat.typing import Self
+
+colorama.just_fix_windows_console()
 
 
 @dataclass(init=False)
@@ -122,22 +127,51 @@ class Config:
                         raise ValueError(msg)
 
         self.full_project_directory = pathlib.Path(project_directory).resolve()
-        self.full_build_directory = self._find_build_directory(project_directory, build_directory)
+        self.full_build_directory = self._find_build_directory(
+            build_directory=build_directory,
+            project_directory=project_directory,
+            verbose=verbose,
+        )
         self.clean_build = clean_build
         self.build_type = build_type
         self.cmake_options = cmake_options if cmake_options is not None else {}
-        self.full_stubs_directory = self._find_stubs_directory(stubs_directory)
+        self.full_stubs_directory = self._find_stubs_directory(
+            stubs_directory=stubs_directory,
+            verbose=verbose,
+        )
         self.stubs_invalid_ok = stubs_invalid_ok
         self.verbose = verbose
 
     def _find_build_directory(
         self: Self,
-        project_directory: pathlib.Path | str,
+        *,
         build_directory: pathlib.Path | str | None,
+        project_directory: pathlib.Path | str,
+        verbose: bool,
     ) -> pathlib.Path:
-        if build_directory is not None:
-            full_build_directory = pathlib.Path(build_directory).resolve()
-        else:
+        # 1. Resolve user-specified path
+        full_build_directory = pathlib.Path(build_directory).resolve() if build_directory is not None else None
+
+        # 2. Filter user-specified path
+        if (
+            full_build_directory is not None
+            and (filtered_directory := self._exclude_install_directories(full_build_directory)) != full_build_directory
+        ):
+            full_build_directory = filtered_directory
+            if verbose:
+                print(  # noqa: T201
+                    f"{colorama.Fore.YELLOW}[charonload] User-specified config option points into Python package directories:{colorama.Style.RESET_ALL}\n"  # noqa: E501
+                    f"{colorama.Fore.YELLOW}[charonload]{colorama.Style.RESET_ALL}\n"
+                    f'{colorama.Fore.YELLOW}[charonload]     build_directory="{build_directory}"{colorama.Style.RESET_ALL}\n'  # noqa: E501
+                    f"{colorama.Fore.YELLOW}[charonload]{colorama.Style.RESET_ALL}\n"
+                    f"{colorama.Fore.YELLOW}[charonload] Overriding and retrying with:{colorama.Style.RESET_ALL}\n"
+                    f"{colorama.Fore.YELLOW}[charonload]{colorama.Style.RESET_ALL}\n"
+                    f"{colorama.Fore.YELLOW}[charonload]     build_directory=None{colorama.Style.RESET_ALL}\n"
+                    f"{colorama.Fore.YELLOW}[charonload]{colorama.Style.RESET_ALL}"
+                )
+
+        # 3. Use fallback if needed
+        if full_build_directory is None:
             full_project_directory = pathlib.Path(project_directory).resolve()
 
             hash_length = 6  # Every 3 bytes will be encoded into 4 base64 characters
@@ -156,6 +190,41 @@ class Config:
 
     def _find_stubs_directory(
         self: Self,
+        *,
         stubs_directory: pathlib.Path | str | None,
+        verbose: bool,
     ) -> pathlib.Path | None:
-        return pathlib.Path(stubs_directory).resolve() if stubs_directory is not None else None
+        # 1. Resolve user-specified path
+        full_stubs_directory = pathlib.Path(stubs_directory).resolve() if stubs_directory is not None else None
+
+        # 2. Filter user-specified path
+        if (
+            full_stubs_directory is not None
+            and (filtered_directory := self._exclude_install_directories(full_stubs_directory)) != full_stubs_directory
+        ):
+            full_stubs_directory = filtered_directory
+            if verbose:
+                print(  # noqa: T201
+                    f"{colorama.Fore.YELLOW}[charonload] User-specified config option points into Python package directories:{colorama.Style.RESET_ALL}\n"  # noqa: E501
+                    f"{colorama.Fore.YELLOW}[charonload]{colorama.Style.RESET_ALL}\n"
+                    f'{colorama.Fore.YELLOW}[charonload]     stubs_directory="{stubs_directory}"{colorama.Style.RESET_ALL}\n'  # noqa: E501
+                    f"{colorama.Fore.YELLOW}[charonload]{colorama.Style.RESET_ALL}\n"
+                    f"{colorama.Fore.YELLOW}[charonload] Overriding and retrying with:{colorama.Style.RESET_ALL}\n"
+                    f"{colorama.Fore.YELLOW}[charonload]{colorama.Style.RESET_ALL}\n"
+                    f"{colorama.Fore.YELLOW}[charonload]     stubs_directory=None{colorama.Style.RESET_ALL}\n"
+                    f"{colorama.Fore.YELLOW}[charonload]{colorama.Style.RESET_ALL}"
+                )
+
+        return full_stubs_directory
+
+    def _exclude_install_directories(self: Self, directory: pathlib.Path) -> pathlib.Path | None:
+        install_directories = [site.getusersitepackages()] if site.ENABLE_USER_SITE else []
+        install_directories.extend(site.getsitepackages())
+
+        return (
+            directory
+            if not any(
+                full_d for d in install_directories if (full_d := pathlib.Path(d).resolve()) in directory.parents
+            )
+            else None
+        )

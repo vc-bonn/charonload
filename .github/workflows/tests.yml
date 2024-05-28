@@ -39,6 +39,9 @@ jobs:
       - name: Install charonload
         run: python -m pip install --editable ".[dev]"
 
+      - name: Install test python project
+        run: python -m pip install tests/data/charonload_installed_project
+
       - name: Run tests
         run: nox -s tests
 
