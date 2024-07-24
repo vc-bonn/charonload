@@ -8,6 +8,7 @@ import pathlib
 import platform
 import sys
 import time
+import warnings
 import weakref
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
@@ -78,6 +79,17 @@ class JITCompileFinder(importlib.abc.MetaPathFinder):
                 f"[charonload] Building module {colorama.Style.BRIGHT}'{fullname}'{colorama.Style.RESET_ALL} ... done. "
                 f"({t_end - t_start:.1f}s)"
             )
+
+            if "torch" not in sys.modules:
+                msg = (
+                    "\n"
+                    f"{colorama.Fore.YELLOW}[charonload] PyTorch seems to be not imported yet. Calling functions from '{fullname}', which internally use Torch on the C++ side, may lead to unexpected behavior.{colorama.Style.RESET_ALL}\n"  # noqa: E501
+                    f"{colorama.Fore.YELLOW}[charonload] Make sure to import PyTorch beforehand:{colorama.Style.RESET_ALL}\n"  # noqa: E501
+                    f"{colorama.Fore.YELLOW}[charonload]{colorama.Style.RESET_ALL}\n"
+                    f"{colorama.Fore.YELLOW}[charonload]     import torch{colorama.Style.RESET_ALL}\n"
+                    f"{colorama.Fore.YELLOW}[charonload]{colorama.Style.RESET_ALL}"
+                )
+                warnings.warn(msg, stacklevel=2)
 
         return None  # noqa: PLR1711, RET501
 
