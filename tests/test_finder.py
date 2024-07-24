@@ -636,7 +636,7 @@ def test_torch_clean_build_configure_failed(shared_datadir: pathlib.Path, tmp_pa
         stubs_directory=VSCODE_STUBS_DIRECTORY,
     )
 
-    import test_torch_clean_build_configure_failed as test_torch  # noqa: F811
+    import test_torch_clean_build_configure_failed as test_torch
 
     t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cpu")
     t_output = test_torch.two_times(t_input)
@@ -1077,7 +1077,7 @@ def test_torch_broken_cmake_try_twice(shared_datadir: pathlib.Path, tmp_path: pa
     assert exc_info.type is charonload.CMakeConfigureError
 
     with pytest.raises(charonload.JITCompileError) as exc_info:
-        import test_torch_broken_cmake_try_twice  # noqa: F401, F811
+        import test_torch_broken_cmake_try_twice  # noqa: F401
 
     assert exc_info.type is charonload.CMakeConfigureError
 
@@ -1112,7 +1112,7 @@ def test_torch_broken_cpp_code_try_twice(shared_datadir: pathlib.Path, tmp_path:
     assert exc_info.type is charonload.BuildError
 
     with pytest.raises(charonload.JITCompileError) as exc_info:
-        import test_torch_broken_cpp_code_try_twice  # noqa: F401, F811
+        import test_torch_broken_cpp_code_try_twice  # noqa: F401
 
     assert exc_info.type is charonload.BuildError
 
