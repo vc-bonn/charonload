@@ -2,3 +2,6 @@
 # torch 2.3.0 on Windows may through a DLL import error, presumably due to the newly introduced dependency to MKL:
 # https://github.com/pytorch/pytorch/issues/125109
 torch!=2.3.0+cpu
+# numpy 2.0 on Windows may be incompatible to torch:
+# https://github.com/pytorch/pytorch/issues/128860
+numpy<2.0
