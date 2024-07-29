@@ -19,7 +19,7 @@ import filelock
 from ._compat import hashlib
 
 if TYPE_CHECKING:  # pragma: no cover
-    from typing import SupportsIndex
+    from typing import Any, SupportsIndex
 
     from ._compat.typing import Self
 
@@ -421,8 +421,10 @@ class _ImportPathStep(_JITCompileStep):
 
         if platform.system() == "Windows":  # pragma: no cover
             dll_directory_list = windows_dll_directories.split(";")
-            for d in dll_directory_list:
-                os.add_dll_directory(d)  # type: ignore[attr-defined]
+            for d_str in dll_directory_list:
+                d = pathlib.Path(d_str)
+                if d.exists() and d.is_dir():
+                    _windows_dll_directories_guard.add(d)
 
 
 module_config: dict[str, Config] = {}
@@ -458,3 +460,25 @@ class _SysMetaPathFinderGuard:
 
 
 _extension_finder_guard = _SysMetaPathFinderGuard(extension_finder, insert_at=0)
+
+
+class _OsAddDllDirectoryGuard:
+    def __init__(self: Self, directories: dict[pathlib.Path, Any]) -> None:
+        self.directories = directories
+
+        self._finalizer = weakref.finalize(self, _OsAddDllDirectoryGuard._clear, self.directories)
+
+    def add(self: Self, d: pathlib.Path) -> None:
+        if d not in self.directories:
+            handler = os.add_dll_directory(d)  # type: ignore[attr-defined]
+            self.directories[d] = handler
+
+    @staticmethod
+    def _clear(directories: dict[pathlib.Path, Any]) -> None:
+        for handler in directories.values():
+            handler.close()  # type: ignore[attr-defined]
+
+
+_windows_dll_directories: dict[pathlib.Path, Any] = {}
+
+_windows_dll_directories_guard = _OsAddDllDirectoryGuard(_windows_dll_directories)
