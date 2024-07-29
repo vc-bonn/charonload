@@ -161,9 +161,7 @@ function(charonload_add_torch_library name)
             OUTPUT "${CMAKE_BINARY_DIR}/charonload/$<CONFIG>/location.txt"
             CONTENT "$<TARGET_FILE:${name}>")
 
-        file(GENERATE
-            OUTPUT "${CMAKE_BINARY_DIR}/charonload/$<CONFIG>/windows_dll_directories.txt"
-            CONTENT "$<TARGET_RUNTIME_DLL_DIRS:${name}>")
+        charonload_generate_windows_dll_directories(${name} "${CMAKE_BINARY_DIR}/charonload/$<CONFIG>/windows_dll_directories.txt")
     endif()
 endfunction()
 
@@ -223,4 +221,19 @@ function(charonload_patch_dependencies name patch_functions)
             list(POP_BACK CMAKE_MESSAGE_INDENT)
         endif()
     endif()
+endfunction()
+
+
+function(charonload_generate_windows_dll_directories name output_file)
+    list(APPEND WINDOWS_DLL_DIRS "$<TARGET_RUNTIME_DLL_DIRS:${name}>")
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST WINDOWS_PATHS NORMALIZE)
+        list(REMOVE_DUPLICATES WINDOWS_PATHS)
+        list(APPEND WINDOWS_DLL_DIRS ${WINDOWS_PATHS})
+    endif()
+
+    file(GENERATE
+         OUTPUT ${output_file}
+         CONTENT "${WINDOWS_DLL_DIRS}")
 endfunction()
