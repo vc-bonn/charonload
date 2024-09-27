@@ -33,7 +33,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--windows-dll-directories",
-        required=True,
+        nargs="?",
+        const="",
+        default="",
         type=str,
         help="the list of DLL directories required for loading the extension",
     )
