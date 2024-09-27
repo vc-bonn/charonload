@@ -348,7 +348,6 @@ class _StubGenerationStep(_JITCompileStep):
 
     def _run_impl(self: Self) -> None:
         full_extension_path: pathlib.Path = self.cache["location"]
-        windows_dll_directories: str = self.cache["windows_dll_directories"]
         old_checksum: str = self.cache.get("checksum", "")
         new_checksum = self._compute_checksum(full_extension_path)
 
@@ -366,10 +365,7 @@ class _StubGenerationStep(_JITCompileStep):
                 (pathlib.Path(__file__).parent / "pybind11_stubgen").as_posix(),
                 "--extension-path",
                 full_extension_path.as_posix(),
-                "--windows-dll-directories",
-                windows_dll_directories,
-                "--root-suffix",
-                "",
+                *self._windows_dll_directories(),
                 "--print-invalid-expressions-as-is",
                 *self._ignore_invalid(),
                 "--exit-code",
@@ -384,6 +380,10 @@ class _StubGenerationStep(_JITCompileStep):
         self.cache["status_stub_generation"] = status
         if status == _StepStatus.FAILED:
             raise self.exception_cls(log)
+
+    def _windows_dll_directories(self: Self) -> list[str]:
+        windows_dll_directories: str = self.cache["windows_dll_directories"]
+        return ["--windows-dll-directories", windows_dll_directories] if windows_dll_directories else []
 
     def _ignore_invalid(self: Self) -> list[str]:
         return ["--ignore-all-errors"] if self.config.stubs_invalid_ok else []
