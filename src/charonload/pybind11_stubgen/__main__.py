@@ -18,7 +18,7 @@ def _make_importable(full_extension_path: pathlib.Path, windows_dll_directories:
         dll_directory_list = windows_dll_directories.split(";")
         for d_str in dll_directory_list:
             d = pathlib.Path(d_str)
-            if d.exists() and d.is_dir():
+            if d.exists() and d.is_absolute() and d.is_dir():
                 # No guard required here
                 os.add_dll_directory(d)  # type: ignore[attr-defined]
 
