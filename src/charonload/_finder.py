@@ -190,14 +190,25 @@ class _CleanStep(_JITCompileStep):
             or not _is_compatible(self.cache.get("version", _version()), _version())
             or any(should_clean)
         ):
+            number_removed_files = 0
+            number_removed_directories = 0
+
             for file in sorted(self.config.full_build_directory.rglob("*"), reverse=True):
                 if any(file.samefile(f) for f in [self.config.full_build_directory / "charonload" / "build.lock"]):
                     continue
 
                 if file.is_file():
                     file.unlink()
+                    number_removed_files += 1
                 elif file.is_dir() and not any(file.iterdir()):
                     file.rmdir()
+                    number_removed_directories += 1
+
+            if self.config.verbose and (number_removed_files > 0 or number_removed_directories > 0):
+                print(  # noqa: T201
+                    f"[charonload] {colorama.Fore.GREEN}{colorama.Style.BRIGHT}Removed:{colorama.Style.NORMAL} "
+                    f"{number_removed_files} files, {number_removed_directories} directories{colorama.Style.RESET_ALL}"
+                )
 
 
 class _InitializeStep(_JITCompileStep):
@@ -420,11 +431,20 @@ class _ImportPathStep(_JITCompileStep):
             sys.path.append(full_extension_directory)
 
         if platform.system() == "Windows":  # pragma: no cover
+            number_added_paths = 0
+
             dll_directory_list = windows_dll_directories.split(";")
             for d_str in dll_directory_list:
                 d = pathlib.Path(d_str)
                 if d.exists() and d.is_absolute() and d.is_dir():
                     _windows_dll_directories_guard.add(d)
+                    number_added_paths += 1
+
+            if self.config.verbose and number_added_paths > 0:
+                print(  # noqa: T201
+                    f"[charonload] {colorama.Fore.GREEN}{colorama.Style.BRIGHT}Added:{colorama.Style.NORMAL} "
+                    f"{number_added_paths} DLL paths (Windows only){colorama.Style.RESET_ALL}"
+                )
 
 
 module_config: dict[str, Config] = {}
