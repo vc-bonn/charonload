@@ -423,7 +423,7 @@ class _ImportPathStep(_JITCompileStep):
             dll_directory_list = windows_dll_directories.split(";")
             for d_str in dll_directory_list:
                 d = pathlib.Path(d_str)
-                if d.exists() and d.is_dir():
+                if d.exists() and d.is_absolute() and d.is_dir():
                     _windows_dll_directories_guard.add(d)
 
 
