@@ -349,12 +349,14 @@ def _torch_incremental_build_function(
     module_name: str,
     project_directory: pathlib.Path,
     build_directory: pathlib.Path,
+    stubs_directory: pathlib.Path | None,
+    in_submodule: bool,  # noqa: FBT001
     result: Any,  # noqa: ANN401
 ) -> None:
     charonload.module_config[module_name] = charonload.Config(
         project_directory,
         build_directory,
-        stubs_directory=VSCODE_STUBS_DIRECTORY,
+        stubs_directory=stubs_directory,
     )
 
     t_start = time.perf_counter()
@@ -364,7 +366,8 @@ def _torch_incremental_build_function(
     result.value = float(t_end - t_start)
 
     t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cpu")
-    t_output = test_torch.two_times(t_input)
+
+    t_output = test_torch.sub.two_times(t_input) if in_submodule else test_torch.two_times(t_input)
 
     assert t_output.device == t_input.device
     assert t_output.shape == t_input.shape
@@ -375,6 +378,9 @@ def _torch_incremental_build(
     module_name: str,
     project_directory: pathlib.Path,
     build_directory: pathlib.Path,
+    *,
+    stubs_directory: pathlib.Path | None = None,
+    in_submodule: bool = False,
 ) -> float:
     result = multiprocessing.get_context("spawn").Value("d", 0.0)
     p = multiprocessing.get_context("spawn").Process(
@@ -383,6 +389,8 @@ def _torch_incremental_build(
             module_name,
             project_directory,
             build_directory,
+            stubs_directory,
+            in_submodule,
             result,
         ),
     )
@@ -420,6 +428,76 @@ def test_torch_incremental_build_cmake(shared_datadir: pathlib.Path, tmp_path: p
     (project_directory / "CMakeLists.txt").touch()
 
     t_with_changes = _torch_incremental_build("test_torch_incremental_build_cmake", project_directory, build_directory)
+
+    assert t_with_changes > t_no_changes
+
+
+def test_torch_incremental_build_stubs_single(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
+    project_directory = shared_datadir / "torch_cpu"
+    build_directory = tmp_path / "build"
+
+    _torch_incremental_build(
+        "test_torch_incremental_build_stubs_single",
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+        in_submodule=False,
+    )
+
+    t_no_changes = _torch_incremental_build(
+        "test_torch_incremental_build_stubs_single",
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+        in_submodule=False,
+    )
+
+    # Either a single file or a directory containing a single file will be generated
+    if (stub := VSCODE_STUBS_DIRECTORY / "test_torch_incremental_build_stubs_single.pyi").exists():
+        stub.unlink()
+    if (stub := VSCODE_STUBS_DIRECTORY / "test_torch_incremental_build_stubs_single").exists():
+        shutil.rmtree(stub, ignore_errors=True)
+
+    t_with_changes = _torch_incremental_build(
+        "test_torch_incremental_build_stubs_single",
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+        in_submodule=False,
+    )
+
+    assert t_with_changes > t_no_changes
+
+
+def test_torch_incremental_build_stubs_multiple(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
+    project_directory = shared_datadir / "torch_submodule"
+    build_directory = tmp_path / "build"
+
+    _torch_incremental_build(
+        "test_torch_incremental_build_stubs_multiple",
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+        in_submodule=True,
+    )
+
+    t_no_changes = _torch_incremental_build(
+        "test_torch_incremental_build_stubs_multiple",
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+        in_submodule=True,
+    )
+
+    shutil.rmtree(VSCODE_STUBS_DIRECTORY / "test_torch_incremental_build_stubs_multiple", ignore_errors=True)
+
+    t_with_changes = _torch_incremental_build(
+        "test_torch_incremental_build_stubs_multiple",
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+        in_submodule=True,
+    )
 
     assert t_with_changes > t_no_changes
 

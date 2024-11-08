@@ -368,7 +368,10 @@ class _StubGenerationStep(_JITCompileStep):
                 and (
                     self.cache.get("status_stub_generation", _StepStatus.SKIPPED) == _StepStatus.FAILED
                     or new_checksum != old_checksum
-                    or not (self.config.full_stubs_directory / self.module_name).exists()
+                    or (
+                        not (self.config.full_stubs_directory / self.module_name).exists()
+                        and not (self.config.full_stubs_directory / f"{self.module_name}.pyi").exists()
+                    )
                 )
             ),
             command_args=[
