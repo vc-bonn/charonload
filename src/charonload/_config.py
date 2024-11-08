@@ -7,6 +7,7 @@ import pathlib
 import re
 import site
 import sys
+import sysconfig
 import tempfile
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -218,8 +219,9 @@ class Config:
         return full_stubs_directory
 
     def _exclude_install_directories(self: Self, directory: pathlib.Path) -> pathlib.Path | None:
-        install_directories = [site.getusersitepackages()] if site.ENABLE_USER_SITE else []
-        install_directories.extend(site.getsitepackages())
+        install_directories = [site.getuserbase()] if site.ENABLE_USER_SITE else []
+        install_directories.extend(sysconfig.get_paths().values())
+        install_directories = list(set(install_directories))  # Remove duplicates
 
         return (
             directory
