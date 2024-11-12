@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import importlib.metadata
-from typing import Tuple, cast
+from typing import cast
 
 
 def _version() -> str:
@@ -15,7 +15,7 @@ def _is_compatible(ver1: str, ver2: str) -> bool:
 def _str_to_tuple(ver: str) -> tuple[int, int, int]:
     components = list(map(int, ver.split(".")))
     components = [*components, 0, 0][:3]
-    return cast(Tuple[int, int, int], tuple(components))  # typing.Tuple required for Python 3.8
+    return cast(tuple[int, int, int], tuple(components))
 
 
 def _same_minor_version(ver1: tuple[int, int, int], ver2: tuple[int, int, int]) -> bool:
