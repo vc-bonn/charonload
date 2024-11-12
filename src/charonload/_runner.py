@@ -10,13 +10,14 @@ import shutil
 import subprocess
 import sys
 from abc import ABC, abstractmethod
-from typing import IO, TYPE_CHECKING, Iterable, Iterator, Literal
+from typing import IO, TYPE_CHECKING, Literal
 
 import colorama
 
 from ._errors import CommandNotFoundError
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable, Iterator
     from types import TracebackType
 
     from ._compat.typing import Self

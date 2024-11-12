@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        python: ["3.9", "3.10", "3.11", "3.12"]
 
     name: "Python ${{ matrix.python }}"
     runs-on: ubuntu-22.04
@@ -29,8 +29,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-          cache: 'pip'
-          cache-dependency-path: '**/*requirements.txt'
+          cache: "pip"
+          cache-dependency-path: "**/*requirements.txt"
 
       - name: Install torch CPU-only version
         run: python -m pip install -r .github/torch_cpu_requirements.txt
@@ -51,6 +51,6 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: re-actors/alls-green@release/v1
-      with:
-        jobs: ${{ toJSON(needs) }}
+      - uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}
