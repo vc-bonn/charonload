@@ -32,7 +32,7 @@ del sys
 import email.utils
 import importlib.metadata
 
-from ._config import Config
+from ._config import Config, ConfigDict, ResolvedConfig
 from ._errors import (
     BuildError,
     CMakeConfigureError,
@@ -57,9 +57,11 @@ __all__ = [
     "CMakeConfigureError",
     "CommandNotFoundError",
     "Config",
+    "ConfigDict",
     "extension_finder",
     "JITCompileError",
     "JITCompileFinder",
     "module_config",
+    "ResolvedConfig",
     "StubGenerationError",
 ]

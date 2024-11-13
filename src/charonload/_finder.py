@@ -23,7 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from ._compat.typing import Self
 
-from ._config import Config
+from ._config import ConfigDict, ResolvedConfig
 from ._errors import BuildError, CMakeConfigureError, StubGenerationError
 from ._persistence import (
     _EnumSerializer,
@@ -94,8 +94,8 @@ class JITCompileFinder(importlib.abc.MetaPathFinder):
         return None  # noqa: PLR1711, RET501
 
 
-def _load(module_name: str, config: Config) -> None:
-    if not isinstance(config, Config):
+def _load(module_name: str, config: ResolvedConfig) -> None:
+    if not isinstance(config, ResolvedConfig):
         msg = f"Invalid type of configuration: expected 'Config', but got '{config.__class__.__name__}'"
         raise TypeError(msg)
 
@@ -124,7 +124,7 @@ class _JITCompileStep(ABC):
     exception_cls = type(None)
     step_name = "<None>"
 
-    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+    def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
         self.module_name = module_name
         self.config = config
         self.step_number = step_number
@@ -151,7 +151,7 @@ class _CleanStep(_JITCompileStep):
     exception_cls = type(None)
     step_name = "Clean"
 
-    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+    def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
         super().__init__(module_name, config, step_number)
         self.cache.connect(
             "status_cmake_configure",
@@ -215,7 +215,7 @@ class _InitializeStep(_JITCompileStep):
     exception_cls = type(None)
     step_name = "Initialize"
 
-    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+    def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
         super().__init__(module_name, config, step_number)
         self.cache.connect(
             "version",
@@ -234,7 +234,7 @@ class _CMakeConfigureStep(_JITCompileStep):
     exception_cls = CMakeConfigureError
     step_name = "CMake Configure"
 
-    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+    def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
         super().__init__(module_name, config, step_number)
         self.cache.connect(
             "status_cmake_configure",
@@ -293,7 +293,7 @@ class _BuildStep(_JITCompileStep):
     exception_cls = BuildError
     step_name = "Build"
 
-    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+    def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
         super().__init__(module_name, config, step_number)
         self.cache.connect(
             "status_cmake_configure",
@@ -334,7 +334,7 @@ class _StubGenerationStep(_JITCompileStep):
     exception_cls = StubGenerationError
     step_name = "Stub Generation"
 
-    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+    def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
         super().__init__(module_name, config, step_number)
         self.cache.connect(
             "status_stub_generation",
@@ -412,7 +412,7 @@ class _ImportPathStep(_JITCompileStep):
     exception_cls = type(None)
     step_name = "Import Path"
 
-    def __init__(self: Self, module_name: str, config: Config, step_number: tuple[int, int]) -> None:
+    def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
         super().__init__(module_name, config, step_number)
         self.cache.connect(
             "location",
@@ -450,11 +450,12 @@ class _ImportPathStep(_JITCompileStep):
                 )
 
 
-module_config: dict[str, Config] = {}
+module_config: ConfigDict = ConfigDict()
 """
-The dictionary storing the registered :class:`Config <charonload._config.Config>` instances.
+The dictionary storing the registered :class:`ResolvedConfig <charonload._config.ResolvedConfig>` instances.
 
-Insert all C++/CUDA extension configurations into this dictionary to make the extensions importable.
+Insert all C++/CUDA extension configurations via :class:`Config <charonload._config.Config>` instances into this
+dictionary to make the respective extensions importable.
 """
 
 extension_finder: JITCompileFinder = JITCompileFinder()

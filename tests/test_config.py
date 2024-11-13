@@ -15,10 +15,12 @@ def test_provided_build_directory(shared_datadir: pathlib.Path, tmp_path: pathli
     build_directory = tmp_path / "build"
     assert not build_directory.exists()
 
-    config = charonload.Config(
+    module_config = charonload.ConfigDict()
+    module_config["test"] = charonload.Config(
         project_directory,
         build_directory,
     )
+    config = module_config["test"]
 
     config.full_build_directory.mkdir(parents=True)
 
@@ -30,9 +32,11 @@ def test_provided_build_directory(shared_datadir: pathlib.Path, tmp_path: pathli
 def test_fallback_build_directory(shared_datadir: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
 
-    config = charonload.Config(
+    module_config = charonload.ConfigDict()
+    module_config["test"] = charonload.Config(
         project_directory,
     )
+    config = module_config["test"]
 
     config.full_build_directory.mkdir(parents=True, exist_ok=True)
 
@@ -43,8 +47,9 @@ def test_fallback_build_directory(shared_datadir: pathlib.Path) -> None:
 def test_relative_project_directory() -> None:
     project_directory = "some/relative/path"
 
+    module_config = charonload.ConfigDict()
     with pytest.raises(ValueError) as exc_info:
-        charonload.Config(
+        module_config["test"] = charonload.Config(
             project_directory,
         )
 
@@ -54,8 +59,9 @@ def test_relative_project_directory() -> None:
 def test_non_existing_project_directory(tmp_path: pathlib.Path) -> None:
     project_directory = tmp_path / "some/absolute/non-existing/path"
 
+    module_config = charonload.ConfigDict()
     with pytest.raises(ValueError) as exc_info:
-        charonload.Config(
+        module_config["test"] = charonload.Config(
             project_directory,
         )
 
@@ -66,8 +72,9 @@ def test_relative_build_directory(shared_datadir: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
     build_directory = "some/relative/path"
 
+    module_config = charonload.ConfigDict()
     with pytest.raises(ValueError) as exc_info:
-        charonload.Config(
+        module_config["test"] = charonload.Config(
             project_directory,
             build_directory,
         )
@@ -78,8 +85,9 @@ def test_relative_build_directory(shared_datadir: pathlib.Path) -> None:
 def test_prohibited_cmake_option_configuration_types(shared_datadir: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
 
+    module_config = charonload.ConfigDict()
     with pytest.raises(ValueError) as exc_info:
-        charonload.Config(
+        module_config["test"] = charonload.Config(
             project_directory,
             cmake_options={"CMAKE_CONFIGURATION_TYPES": "Release"},
         )
@@ -90,8 +98,9 @@ def test_prohibited_cmake_option_configuration_types(shared_datadir: pathlib.Pat
 def test_prohibited_cmake_option_prefix_path(shared_datadir: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
 
+    module_config = charonload.ConfigDict()
     with pytest.raises(ValueError) as exc_info:
-        charonload.Config(
+        module_config["test"] = charonload.Config(
             project_directory,
             cmake_options={"CMAKE_PREFIX_PATH": "some/path"},
         )
@@ -102,8 +111,9 @@ def test_prohibited_cmake_option_prefix_path(shared_datadir: pathlib.Path) -> No
 def test_prohibited_cmake_option_project_top_level_includes(shared_datadir: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
 
+    module_config = charonload.ConfigDict()
     with pytest.raises(ValueError) as exc_info:
-        charonload.Config(
+        module_config["test"] = charonload.Config(
             project_directory,
             cmake_options={"CMAKE_PROJECT_TOP_LEVEL_INCLUDES": "some/path"},
         )
@@ -114,8 +124,9 @@ def test_prohibited_cmake_option_project_top_level_includes(shared_datadir: path
 def test_prohibited_cmake_option_torch_extension_name(shared_datadir: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
 
+    module_config = charonload.ConfigDict()
     with pytest.raises(ValueError) as exc_info:
-        charonload.Config(
+        module_config["test"] = charonload.Config(
             project_directory,
             cmake_options={"TORCH_EXTENSION_NAME": "Name"},
         )
@@ -126,8 +137,9 @@ def test_prohibited_cmake_option_torch_extension_name(shared_datadir: pathlib.Pa
 def test_prohibited_cmake_option_reserved_symbols(shared_datadir: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
 
+    module_config = charonload.ConfigDict()
     with pytest.raises(ValueError) as exc_info:
-        charonload.Config(
+        module_config["test"] = charonload.Config(
             project_directory,
             cmake_options={"CHARONLOAD_TEST": "some value"},
         )
@@ -138,10 +150,12 @@ def test_prohibited_cmake_option_reserved_symbols(shared_datadir: pathlib.Path) 
 def test_none_cmake_options(shared_datadir: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
 
-    config = charonload.Config(
+    module_config = charonload.ConfigDict()
+    module_config["test"] = charonload.Config(
         project_directory,
         cmake_options=None,
     )
+    config = module_config["test"]
 
     assert len(config.cmake_options) == 0
 
@@ -149,10 +163,12 @@ def test_none_cmake_options(shared_datadir: pathlib.Path) -> None:
 def test_empty_cmake_options(shared_datadir: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
 
-    config = charonload.Config(
+    module_config = charonload.ConfigDict()
+    module_config["test"] = charonload.Config(
         project_directory,
         cmake_options={},
     )
+    config = module_config["test"]
 
     assert len(config.cmake_options) == 0
 
@@ -162,10 +178,12 @@ def test_stubs_directory(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -
     stubs_directory = tmp_path / "typings"
     assert not stubs_directory.exists()
 
-    config = charonload.Config(
+    module_config = charonload.ConfigDict()
+    module_config["test"] = charonload.Config(
         project_directory,
         stubs_directory=stubs_directory,
     )
+    config = module_config["test"]
 
     assert config.full_stubs_directory is not None
     config.full_stubs_directory.mkdir(parents=True)
@@ -178,10 +196,12 @@ def test_stubs_directory(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -
 def test_no_stubs_generation(shared_datadir: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
 
-    config = charonload.Config(
+    module_config = charonload.ConfigDict()
+    module_config["test"] = charonload.Config(
         project_directory,
         stubs_directory=None,
     )
+    config = module_config["test"]
 
     assert config.full_stubs_directory is None
 
@@ -190,8 +210,9 @@ def test_relative_stubs_directory(shared_datadir: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cpu"
     stubs_directory = "some/relative/path"
 
+    module_config = charonload.ConfigDict()
     with pytest.raises(ValueError) as exc_info:
-        charonload.Config(
+        module_config["test"] = charonload.Config(
             project_directory,
             stubs_directory=stubs_directory,
         )
