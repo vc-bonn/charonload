@@ -9,6 +9,7 @@ import site
 import sys
 import sysconfig
 import tempfile
+from collections import UserDict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -20,9 +21,85 @@ if TYPE_CHECKING:  # pragma: no cover
 colorama.just_fix_windows_console()
 
 
-@dataclass(init=False)
+@dataclass(init=False)  # Python 3.10+: Use "_: KW_ONLY"
 class Config:
-    """The set of configuration options required for the import logic of the :class:`JITCompileFinder`."""
+    """
+    Set of user-specified configuration options required for the import logic of the :class:`JITCompileFinder`.
+
+    This will be resolved into :class:`ResolvedConfig`.
+    """
+
+    project_directory: pathlib.Path | str
+    """The absolute path to the root directory of the C++/CUDA extension containing the root ``CMakeLists.txt`` file."""
+
+    build_directory: pathlib.Path | str | None
+    """
+    An optional absolute path to a build directory.
+
+    If not specified, the build will be placed in the temporary directory of the operating system.
+    """
+
+    clean_build: bool
+    """
+    Whether to remove all cached files of previous builds from the build directory.
+
+    This is useful to ensure consistent behavior after major changes in the CMake files of the project.
+    """
+
+    build_type: str
+    """The build type passed to CMake to compile the extension."""
+
+    cmake_options: dict[str, str] | None
+    """Additional CMake options to pass to the project when JIT compiling."""
+
+    stubs_directory: pathlib.Path | str | None
+    """
+    An optional absolute path to the directory where stub files of the extension should be generated.
+
+    This is useful for IDEs to get syntax highlighting and auto-completion for the extension content. For VS Code, the
+    respective (default) directory to specify here is ``<project root directory>/typings``. Stub generation is disabled
+    if set to ``None``.
+    """
+
+    stubs_invalid_ok: bool
+    """Whether to accept invalid stubs and skip raising an error."""
+
+    verbose: bool
+    """
+    Whether to enable printing the full log of the JIT compilation.
+
+    This is useful for debugging.
+    """
+
+    def __init__(
+        self: Self,
+        project_directory: pathlib.Path | str,
+        build_directory: pathlib.Path | str | None = None,
+        *,
+        clean_build: bool = False,
+        build_type: str = "RelWithDebInfo",
+        cmake_options: dict[str, str] | None = None,
+        stubs_directory: pathlib.Path | str | None = None,
+        stubs_invalid_ok: bool = False,
+        verbose: bool = False,
+    ) -> None:
+        self.project_directory = project_directory
+        self.build_directory = build_directory
+        self.clean_build = clean_build
+        self.build_type = build_type
+        self.cmake_options = cmake_options
+        self.stubs_directory = stubs_directory
+        self.stubs_invalid_ok = stubs_invalid_ok
+        self.verbose = verbose
+
+
+@dataclass(init=False)  # Python 3.10+: Use "kw_only=True"
+class ResolvedConfig:
+    """
+    Set of resolved configuration options that are actually used for the import logic of the :class:`JITCompileFinder`.
+
+    This has been resolved from :class:`Config`.
+    """
 
     full_project_directory: pathlib.Path
     """The full absolute path to the project directory."""
@@ -50,69 +127,76 @@ class Config:
 
     def __init__(
         self: Self,
-        project_directory: pathlib.Path | str,
-        build_directory: pathlib.Path | str | None = None,
         *,
-        clean_build: bool = False,
-        build_type: str = "RelWithDebInfo",
-        cmake_options: dict[str, str] | None = None,
-        stubs_directory: pathlib.Path | str | None = None,
-        stubs_invalid_ok: bool = False,
-        verbose: bool = False,
+        full_project_directory: pathlib.Path,
+        full_build_directory: pathlib.Path,
+        clean_build: bool,
+        build_type: str,
+        cmake_options: dict[str, str],
+        full_stubs_directory: pathlib.Path | None,
+        stubs_invalid_ok: bool,
+        verbose: bool,
     ) -> None:
+        self.full_project_directory = full_project_directory
+        self.full_build_directory = full_build_directory
+        self.clean_build = clean_build
+        self.build_type = build_type
+        self.cmake_options = cmake_options
+        self.full_stubs_directory = full_stubs_directory
+        self.stubs_invalid_ok = stubs_invalid_ok
+        self.verbose = verbose
+
+
+class ConfigDict(UserDict[str, ResolvedConfig]):
+    """
+    A configuration dictionary for holding resolved :class:`Config` instances.
+
+    Configurations will be resolved during insertion into the dictionary.
+    """
+
+    def __setitem__(self: Self, key: str, value: Config | ResolvedConfig) -> None:
         """
-        Create the configuration options from the provided parameters.
+        Resolve a user-specified configuration :class:`Config` into :class:`ResolvedConfig` and insert it.
 
         Parameters
         ----------
-        project_directory
-            The absolute path to the root directory of the C++/CUDA extension containing the root ``CMakeLists.txt``
-            file.
-        build_directory
-            An optional absolute path to a build directory. If not specified, the build will be placed in the
-            temporary directory of the operating system.
-        clean_build
-            Whether to remove all cached files of previous builds from the build directory. This is useful to ensure
-            consistent behavior after major changes in the CMake files of the project.
-        build_type
-            The build type passed to CMake to compile the extension.
-        cmake_options
-            Additional CMake options to pass to the project when JIT compiling.
-        stubs_directory
-            An optional absolute path to the directory where stub files of the extension should be generated. This is
-            useful for IDEs to get syntax highlighting and auto-completion for the extension content. For VS Code, the
-            respective (default) directory to specify here is ``<project root directory>/typings``. Stub generation is
-            disabled if set to ``None``.
-        stubs_invalid_ok
-            Whether to accept invalid stubs and skip raising an error.
-        verbose
-            Whether to enable printing the full log of the JIT compilation. This is useful for debugging.
+        key
+            The associated key of the configuration.
+        value
+            A user-specified or already resolved configuration.
 
         Raises
         ------
         ValueError
-            If either:
-            1) ``project_directory``,``build_directory``, or ``stubs_directory`` are not absolute paths,
-            2) ``project_directory`` does not exists, or
-            3) Prohibited options are inserted into ``cmake_options``.
+            During resolution if:
+            1) ``config.project_directory``, ``config.build_directory``, or ``config.stubs_directory`` are not
+               absolute paths,
+            2) ``config.project_directory`` does not exist, or
+            3) ``config.cmake_options`` contains prohibited options.
         """
-        if not pathlib.Path(project_directory).is_absolute():
-            msg = f'Expected absolute project directory, but got relative directory "{project_directory}"'
+        super().__setitem__(
+            key,
+            self._resolve(value) if isinstance(value, Config) else value,
+        )
+
+    def _resolve(self: Self, config: Config) -> ResolvedConfig:
+        if not pathlib.Path(config.project_directory).is_absolute():
+            msg = f'Expected absolute project directory, but got relative directory "{config.project_directory}"'
             raise ValueError(msg)
 
-        if not pathlib.Path(project_directory).resolve().exists():
-            msg = f'Expected existing project directory, but got non-existing directory "{project_directory}"'
+        if not pathlib.Path(config.project_directory).resolve().exists():
+            msg = f'Expected existing project directory, but got non-existing directory "{config.project_directory}"'
             raise ValueError(msg)
 
-        if build_directory is not None and not pathlib.Path(build_directory).is_absolute():
-            msg = f'Expected absolute build directory, but got relative directory "{build_directory}"'
+        if config.build_directory is not None and not pathlib.Path(config.build_directory).is_absolute():
+            msg = f'Expected absolute build directory, but got relative directory "{config.build_directory}"'
             raise ValueError(msg)
 
-        if stubs_directory is not None and not pathlib.Path(stubs_directory).is_absolute():
-            msg = f'Expected absolute stub directory, but got relative directory "{stubs_directory}"'
+        if config.stubs_directory is not None and not pathlib.Path(config.stubs_directory).is_absolute():
+            msg = f'Expected absolute stub directory, but got relative directory "{config.stubs_directory}"'
             raise ValueError(msg)
 
-        if cmake_options is not None:
+        if config.cmake_options is not None:
             prohibited_cmake_options = {
                 "CHARONLOAD_.*",
                 "CMAKE_CONFIGURATION_TYPES",
@@ -121,27 +205,29 @@ class Config:
                 "TORCH_EXTENSION_NAME",
             }
 
-            for k in cmake_options:
+            for k in config.cmake_options:
                 for pk in prohibited_cmake_options:
                     if re.search(pk, k) is not None:
                         msg = f'Found prohibited CMake option="{k}" which is not allowed or supported.'
                         raise ValueError(msg)
 
-        self.full_project_directory = pathlib.Path(project_directory).resolve()
-        self.full_build_directory = self._find_build_directory(
-            build_directory=build_directory,
-            project_directory=project_directory,
-            verbose=verbose,
+        return ResolvedConfig(
+            full_project_directory=pathlib.Path(config.project_directory).resolve(),
+            full_build_directory=self._find_build_directory(
+                build_directory=config.build_directory,
+                project_directory=config.project_directory,
+                verbose=config.verbose,
+            ),
+            clean_build=config.clean_build,
+            build_type=config.build_type,
+            cmake_options=config.cmake_options if config.cmake_options is not None else {},
+            full_stubs_directory=self._find_stubs_directory(
+                stubs_directory=config.stubs_directory,
+                verbose=config.verbose,
+            ),
+            stubs_invalid_ok=config.stubs_invalid_ok,
+            verbose=config.verbose,
         )
-        self.clean_build = clean_build
-        self.build_type = build_type
-        self.cmake_options = cmake_options if cmake_options is not None else {}
-        self.full_stubs_directory = self._find_stubs_directory(
-            stubs_directory=stubs_directory,
-            verbose=verbose,
-        )
-        self.stubs_invalid_ok = stubs_invalid_ok
-        self.verbose = verbose
 
     def _find_build_directory(
         self: Self,
