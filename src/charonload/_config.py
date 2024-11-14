@@ -176,10 +176,10 @@ class ConfigDict(UserDict[str, ResolvedConfig]):
         """
         super().__setitem__(
             key,
-            self._resolve(value) if isinstance(value, Config) else value,
+            self._resolve(key, value) if isinstance(value, Config) else value,
         )
 
-    def _resolve(self: Self, config: Config) -> ResolvedConfig:
+    def _resolve(self: Self, module_name: str, config: Config) -> ResolvedConfig:
         if not pathlib.Path(config.project_directory).is_absolute():
             msg = f'Expected absolute project directory, but got relative directory "{config.project_directory}"'
             raise ValueError(msg)
@@ -215,6 +215,7 @@ class ConfigDict(UserDict[str, ResolvedConfig]):
             full_project_directory=pathlib.Path(config.project_directory).resolve(),
             full_build_directory=self._find_build_directory(
                 build_directory=config.build_directory,
+                module_name=module_name,
                 project_directory=config.project_directory,
                 verbose=config.verbose,
             ),
@@ -233,6 +234,7 @@ class ConfigDict(UserDict[str, ResolvedConfig]):
         self: Self,
         *,
         build_directory: pathlib.Path | str | None,
+        module_name: str,
         project_directory: pathlib.Path | str,
         verbose: bool,
     ) -> pathlib.Path:
@@ -270,7 +272,7 @@ class ConfigDict(UserDict[str, ResolvedConfig]):
             full_build_directory = (
                 pathlib.Path(tempfile.gettempdir())
                 / f"charonload-of-{getpass.getuser()}"
-                / f"{full_project_directory.name}_build_{path_hash}"
+                / f"{module_name}_build_{path_hash}"
             )
 
         return full_build_directory
