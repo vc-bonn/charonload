@@ -53,7 +53,7 @@ class _Serializer:
     decode: Callable[[str], Any]
 
 
-class _PersistentDict(collections.abc.MutableMapping):
+class _PersistentDict(collections.abc.MutableMapping[str, Any]):
     def __init__(self: Self) -> None:
         self._entries: dict[str, _TypedPersistentString] = {}
         self._serializers: dict[type, _Serializer] = {}
@@ -76,7 +76,7 @@ class _PersistentDict(collections.abc.MutableMapping):
         msg = "Deleting connections is not supported."
         raise AttributeError(msg)
 
-    def __iter__(self: Self) -> collections.abc.Iterator:
+    def __iter__(self: Self) -> collections.abc.Iterator[str]:
         return iter(self._entries)
 
     def __len__(self: Self) -> int:

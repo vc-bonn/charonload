@@ -40,7 +40,9 @@ colorama.just_fix_windows_console()
 class JITCompileFinder(importlib.abc.MetaPathFinder):
     """An import finder for executing the just-in-time (JIT) compilation."""
 
-    def find_spec(self: Self, fullname, path, target=None) -> None:  # noqa: ANN001, ARG002
+    def find_spec(  # type: ignore[no-untyped-def]
+        self: Self, fullname, path, target=None  # noqa: ANN001, ARG002
+    ) -> None:
         """
         Find the spec of the specified module.
 
@@ -96,7 +98,7 @@ class JITCompileFinder(importlib.abc.MetaPathFinder):
 
 def _load(module_name: str, config: ResolvedConfig) -> None:
     if not isinstance(config, ResolvedConfig):
-        msg = f"Invalid type of configuration: expected 'Config', but got '{config.__class__.__name__}'"
+        msg = f"Invalid type of configuration: expected 'Config', but got '{config.__class__.__name__}'"  # type: ignore[unreachable]
         raise TypeError(msg)
 
     (config.full_build_directory / "charonload").mkdir(parents=True, exist_ok=True)
@@ -500,7 +502,7 @@ class _OsAddDllDirectoryGuard:
     @staticmethod
     def _clear(directories: dict[pathlib.Path, Any]) -> None:
         for handler in directories.values():
-            handler.close()  # type: ignore[attr-defined]
+            handler.close()
 
 
 _windows_dll_directories: dict[pathlib.Path, Any] = {}

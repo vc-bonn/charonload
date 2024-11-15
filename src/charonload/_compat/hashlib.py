@@ -19,7 +19,7 @@ if sys.version_info < (3, 11):
         elif callable(digest):
             file_hasher = digest()
         else:
-            msg = "Wrong type of digest: Should be either str or Callable."
+            msg = "Wrong type of digest: Should be either str or Callable."  # type: ignore[unreachable]
             raise TypeError(msg)
 
         num_blocks = 1024
