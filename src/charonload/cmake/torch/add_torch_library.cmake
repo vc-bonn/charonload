@@ -26,7 +26,7 @@
             // Define some bindings ...
         }
 
-  3. The usage requirements for PyTorch will be added to ``<name>`` and, if necessary,
+  3. The :doc:`usage requirements for PyTorch</src/pytorch_handling>` will be added to ``<name>`` and, if necessary,
      recursively to all of its dependencies:
 
      - C++ standard

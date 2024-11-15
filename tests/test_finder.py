@@ -39,7 +39,7 @@ def test_installed_project() -> None:
     assert config.full_stubs_directory not in config.full_project_directory.parents
 
     t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cpu")
-    t_output = charonload_installed_project.two_times(t_input)
+    t_output = charonload_installed_project.two_times(t_input)  # type: ignore[attr-defined]
 
     assert t_output.device == t_input.device
     assert t_output.shape == t_input.shape
@@ -399,7 +399,7 @@ def _torch_incremental_build(
     p.join()
     assert p.exitcode == 0
 
-    return float(result.value)  # type: ignore[attr-defined]
+    return float(result.value)
 
 
 def test_torch_incremental_build_cpp(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
@@ -1009,7 +1009,7 @@ def test_concurrent_process_fork_import(shared_datadir: pathlib.Path, tmp_path: 
 
     num = 5
     jobs = [
-        multiprocessing.get_context("fork").Process(target=_concurrent_process_fork_import, args=(i,))  # type: ignore[attr-defined]
+        multiprocessing.get_context("fork").Process(target=_concurrent_process_fork_import, args=(i,))
         for i in range(num)
     ]
 
