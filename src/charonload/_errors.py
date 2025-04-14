@@ -29,7 +29,7 @@ class JITCompileError(ABC, Exception):
 
         super().__init__(f"{self.step_name} failed:\n\n{self.log}" if log is not None else f"{self.step_name} failed.")
 
-    def __new__(cls: type[Self], *args: Any, **kwargs: Any) -> Self:  # noqa: ANN401, ARG003
+    def __new__(cls: type[Self], *args: Any, **kwargs: Any) -> Self:  # noqa: ANN401, ARG004
         if cls is JITCompileError:
             msg = f"Cannot instantiate abstract class {cls.__name__}"
             raise TypeError(msg)
