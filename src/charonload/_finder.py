@@ -175,22 +175,18 @@ class _CleanStep(_JITCompileStep):
             str,
             self.config.full_build_directory / "charonload" / "version.txt",
         )
+        self.cache.connect(
+            "torch_version",
+            str,
+            self.config.full_build_directory / "charonload" / self.config.build_type / "torch_version.txt",
+        )
 
     def _run_impl(self: Self) -> None:
-        clean_if_failed = {
-            "status_cmake_configure": True,
-            "status_build": False,
-            "status_stub_generation": False,
-        }
-        step_failed = {
-            step: bool(self.cache.get(step, _StepStatus.SKIPPED) == _StepStatus.FAILED) for step in clean_if_failed
-        }
-        should_clean = [clean_if_failed[step] and failed for step, failed in step_failed.items()]
-
         if (
             self.config.clean_build
-            or not _is_compatible(self.cache.get("version", _version()), _version())
-            or any(should_clean)
+            or self._version_incompatible()
+            or self._crucial_step_failed()
+            or self._torch_version_changed()
         ):
             number_removed_files = 0
             number_removed_directories = 0
@@ -211,6 +207,32 @@ class _CleanStep(_JITCompileStep):
                     f"[charonload] {colorama.Fore.GREEN}{colorama.Style.BRIGHT}Removed:{colorama.Style.NORMAL} "
                     f"{number_removed_files} files, {number_removed_directories} directories{colorama.Style.RESET_ALL}"
                 )
+
+        if "torch" in sys.modules:
+            self.cache["torch_version"] = str(sys.modules["torch"].__version__)
+
+    def _crucial_step_failed(self: Self) -> bool:
+        is_crucial = {
+            "status_cmake_configure": True,
+            "status_build": False,
+            "status_stub_generation": False,
+        }
+        failed_statuses = {
+            step: bool(self.cache.get(step, _StepStatus.SKIPPED) == _StepStatus.FAILED) for step in is_crucial
+        }
+        return any(is_crucial[step] and failed for step, failed in failed_statuses.items())
+
+    def _version_incompatible(self: Self) -> bool:
+        return not _is_compatible(self.cache.get("version", _version()), _version())
+
+    def _torch_version_changed(self: Self) -> bool:
+        if "torch" in sys.modules:
+            current_torch_version = str(sys.modules["torch"].__version__)
+            previous_torch_version: str = self.cache.get("torch_version", str(sys.modules["torch"].__version__))
+
+            return current_torch_version != previous_torch_version
+
+        return False
 
 
 class _InitializeStep(_JITCompileStep):

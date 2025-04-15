@@ -686,6 +686,39 @@ def test_torch_clean_build_incompatible_version(shared_datadir: pathlib.Path, tm
     assert not dirty_file.exists()
 
 
+def test_torch_clean_build_incompatible_torch_version(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
+    project_directory = shared_datadir / "torch_cpu"
+    build_directory = tmp_path / "build"
+
+    charonload.module_config["test_torch_clean_build_incompatible_torch_version"] = charonload.Config(
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+    )
+    config = charonload.module_config["test_torch_clean_build_incompatible_torch_version"]
+
+    dirty_file = build_directory / "dirty.txt"
+
+    build_directory.mkdir(parents=True, exist_ok=True)
+    (build_directory / "charonload" / config.build_type).mkdir(parents=True, exist_ok=True)
+    dirty_file.touch()
+    with (build_directory / "charonload" / config.build_type / "torch_version.txt").open("w") as f:
+        f.write("0.0")
+
+    assert dirty_file.exists()
+
+    import test_torch_clean_build_incompatible_torch_version as test_torch
+
+    t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cpu")
+    t_output = test_torch.two_times(t_input)
+
+    assert t_output.device == t_input.device
+    assert t_output.shape == t_input.shape
+    assert torch.equal(t_output, 2 * t_input)
+
+    assert not dirty_file.exists()
+
+
 def test_torch_clean_build_configure_failed(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
     build_directory = tmp_path / "build"
 
