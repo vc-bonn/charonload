@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022"]
+        os: ["ubuntu-24.04", "windows-2025"]
         python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     name: "${{ matrix.os }} / Python ${{ matrix.python }}"
@@ -57,7 +57,7 @@ jobs:
       - tests
 
     name: "Check Tests"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: re-actors/alls-green@release/v1
