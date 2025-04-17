@@ -79,3 +79,5 @@ html_static_path = ["_static"]
 # html_css_files = []
 
 html_copy_source = False
+
+# suppress_warnings = ["myst.domains"]
