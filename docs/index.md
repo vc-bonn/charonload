@@ -11,6 +11,8 @@
 :hidden:
 
 Overview <self>
+src/jit_compiling
+src/pytorch_handling
 ```
 
 ```{toctree}
