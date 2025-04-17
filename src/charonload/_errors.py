@@ -27,7 +27,25 @@ class JITCompileError(ABC, Exception):
         self.log = log
         """The full log from the underlying compiler."""
 
-        super().__init__(f"{self.step_name} failed:\n\n{self.log}" if log is not None else f"{self.step_name} failed.")
+        msg = ""
+        if self.log is not None:
+            msg += f"{self.step_name} failed:\n"
+            msg += "----------------------------------------------------------------\n"
+            msg += "\n"
+            msg += self.log
+            msg += "\n"
+            msg += "----------------------------------------------------------------\n"
+        else:
+            msg += f"{self.step_name} failed.\n"
+        msg += "\n"
+        msg += (
+            "charonload might automatically run a clean build on the next call in order to try to resolve the error. "
+        )
+        msg += "If the issue persists, you can override charonload's behavior via these environment variables:\n"
+        msg += "  - CHARONLOAD_FORCE_CLEAN_BUILD=1 : Enforce clean builds for all JIT compiled projects.\n"
+        msg += "  - CHARONLOAD_FORCE_VERBOSE=1     : Always show full JIT compilation logs (for debugging).\n"
+
+        super().__init__(msg)
 
     def __new__(cls: type[Self], *args: Any, **kwargs: Any) -> Self:  # noqa: ANN401, ARG004
         if cls is JITCompileError:
