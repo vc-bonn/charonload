@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import getpass
 import hashlib
+import os
 import pathlib
 import re
 import site
@@ -24,9 +25,9 @@ colorama.just_fix_windows_console()
 @dataclass(init=False)  # Python 3.10+: Use "_: KW_ONLY"
 class Config:
     """
-    Set of user-specified configuration options required for the import logic of the :class:`JITCompileFinder`.
+    Set of user-specified configuration options for setting up the import logic of :class:`JITCompileFinder`.
 
-    This will be resolved into :class:`ResolvedConfig`.
+    This will be resolved into :class:`ResolvedConfig` before usage.
     """
 
     project_directory: pathlib.Path | str
@@ -44,6 +45,12 @@ class Config:
     Whether to remove all cached files of previous builds from the build directory.
 
     This is useful to ensure consistent behavior after major changes in the CMake files of the project.
+
+    .. admonition:: Overrides
+      :class: important
+
+      If the environment variable ``CHARONLOAD_FORCE_CLEAN_BUILD`` is set, it will replace this value in
+      :class:`ResolvedConfig`.
     """
 
     build_type: str
@@ -62,13 +69,27 @@ class Config:
     """
 
     stubs_invalid_ok: bool
-    """Whether to accept invalid stubs and skip raising an error."""
+    """
+    Whether to accept invalid stubs and skip raising an error.
+
+    .. admonition:: Overrides
+      :class: important
+
+      If the environment variable ``CHARONLOAD_FORCE_STUBS_INVALID_OK`` is set, it will replace this value in
+      :class:`ResolvedConfig`.
+    """
 
     verbose: bool
     """
     Whether to enable printing the full log of the JIT compilation.
 
     This is useful for debugging.
+
+    .. admonition:: Overrides
+      :class: important
+
+      If the environment variable ``CHARONLOAD_FORCE_VERBOSE`` is set, it will replace this value in
+      :class:`ResolvedConfig`.
     """
 
     def __init__(
@@ -96,9 +117,9 @@ class Config:
 @dataclass(init=False)  # Python 3.10+: Use "kw_only=True"
 class ResolvedConfig:
     """
-    Set of resolved configuration options that are actually used for the import logic of the :class:`JITCompileFinder`.
+    Set of resolved configuration options that is **actually used** in the import logic of :class:`JITCompileFinder`.
 
-    This has been resolved from :class:`Config`.
+    This has been resolved from :class:`Config` and from the environment variables.
     """
 
     full_project_directory: pathlib.Path
@@ -219,16 +240,30 @@ class ConfigDict(UserDict[str, ResolvedConfig]):
                 project_directory=config.project_directory,
                 verbose=config.verbose,
             ),
-            clean_build=config.clean_build,
+            clean_build=self._str_to_bool(os.environ.get("CHARONLOAD_FORCE_CLEAN_BUILD", default=config.clean_build)),
             build_type=config.build_type,
             cmake_options=config.cmake_options if config.cmake_options is not None else {},
             full_stubs_directory=self._find_stubs_directory(
                 stubs_directory=config.stubs_directory,
                 verbose=config.verbose,
             ),
-            stubs_invalid_ok=config.stubs_invalid_ok,
-            verbose=config.verbose,
+            stubs_invalid_ok=self._str_to_bool(
+                os.environ.get("CHARONLOAD_FORCE_STUBS_INVALID_OK", default=config.stubs_invalid_ok)
+            ),
+            verbose=self._str_to_bool(os.environ.get("CHARONLOAD_FORCE_VERBOSE", default=config.verbose)),
         )
+
+    def _str_to_bool(self: Self, s: str | bool) -> bool:
+        if isinstance(s, bool):
+            return s
+
+        if s.lower() in ["1", "on", "yes", "true", "y"]:
+            return True
+        if s.lower() in ["0", "off", "no", "false", "n"]:
+            return False
+
+        msg = f'Cannot convert string "{s}" to bool'
+        raise ValueError(msg)
 
     def _find_build_directory(
         self: Self,

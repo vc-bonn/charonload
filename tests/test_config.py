@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import multiprocessing
+import os
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -8,6 +10,18 @@ if TYPE_CHECKING:
 import pytest
 
 import charonload
+
+
+def _true_values() -> list[str]:
+    return ["1", "on", "On", "ON", "true", "TrUe", "True", "yes", "Yes", "YES", "y", "Y"]
+
+
+def _false_values() -> list[str]:
+    return ["0", "off", "Off", "OFF", "false", "FaLsE", "False", "no", "No", "NO", "n", "N"]
+
+
+def _error_values() -> list[str]:
+    return ["OOPS", "42", "f"]
 
 
 def test_provided_build_directory(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
@@ -80,6 +94,89 @@ def test_relative_build_directory(shared_datadir: pathlib.Path) -> None:
         )
 
     assert exc_info.type is ValueError
+
+
+def _force_clean_build(
+    shared_datadir: pathlib.Path,
+    environ_value: str,
+    value: bool,  # noqa: FBT001
+    expected_value: bool,  # noqa: FBT001
+) -> None:
+    os.environ["CHARONLOAD_FORCE_CLEAN_BUILD"] = environ_value
+
+    project_directory = shared_datadir / "torch_cpu"
+
+    module_config = charonload.ConfigDict()
+    module_config["test"] = charonload.Config(
+        project_directory,
+        clean_build=value,
+    )
+    config = module_config["test"]
+
+    assert config.clean_build == expected_value
+
+
+def _force_clean_build_error(shared_datadir: pathlib.Path, environ_value: str) -> None:
+    os.environ["CHARONLOAD_FORCE_CLEAN_BUILD"] = environ_value
+
+    project_directory = shared_datadir / "torch_cpu"
+
+    module_config = charonload.ConfigDict()
+    with pytest.raises(ValueError) as exc_info:
+        module_config["test"] = charonload.Config(
+            project_directory,
+        )
+
+    assert exc_info.type is ValueError
+
+
+@pytest.mark.parametrize("environ_value", _true_values())
+def test_force_clean_build_true(shared_datadir: pathlib.Path, environ_value: str) -> None:
+    p = multiprocessing.get_context("spawn").Process(
+        target=_force_clean_build,
+        args=(
+            shared_datadir,
+            environ_value,
+            False,
+            True,
+        ),
+    )
+
+    p.start()
+    p.join()
+    assert p.exitcode == 0
+
+
+@pytest.mark.parametrize("environ_value", _false_values())
+def test_force_clean_build_false(shared_datadir: pathlib.Path, environ_value: str) -> None:
+    p = multiprocessing.get_context("spawn").Process(
+        target=_force_clean_build,
+        args=(
+            shared_datadir,
+            environ_value,
+            True,
+            False,
+        ),
+    )
+
+    p.start()
+    p.join()
+    assert p.exitcode == 0
+
+
+@pytest.mark.parametrize("environ_value", _error_values())
+def test_force_clean_build_error(shared_datadir: pathlib.Path, environ_value: str) -> None:
+    p = multiprocessing.get_context("spawn").Process(
+        target=_force_clean_build_error,
+        args=(
+            shared_datadir,
+            environ_value,
+        ),
+    )
+
+    p.start()
+    p.join()
+    assert p.exitcode == 0
 
 
 def test_prohibited_cmake_option_configuration_types(shared_datadir: pathlib.Path) -> None:
@@ -218,3 +315,169 @@ def test_relative_stubs_directory(shared_datadir: pathlib.Path) -> None:
         )
 
     assert exc_info.type is ValueError
+
+
+def _force_stubs_invalid_ok(
+    shared_datadir: pathlib.Path,
+    environ_value: str,
+    value: bool,  # noqa: FBT001
+    expected_value: bool,  # noqa: FBT001
+) -> None:
+    os.environ["CHARONLOAD_FORCE_STUBS_INVALID_OK"] = environ_value
+
+    project_directory = shared_datadir / "torch_cpu"
+
+    module_config = charonload.ConfigDict()
+    module_config["test"] = charonload.Config(
+        project_directory,
+        stubs_invalid_ok=value,
+    )
+    config = module_config["test"]
+
+    assert config.stubs_invalid_ok == expected_value
+
+
+def _force_stubs_invalid_ok_error(shared_datadir: pathlib.Path, environ_value: str) -> None:
+    os.environ["CHARONLOAD_FORCE_STUBS_INVALID_OK"] = environ_value
+
+    project_directory = shared_datadir / "torch_cpu"
+
+    module_config = charonload.ConfigDict()
+    with pytest.raises(ValueError) as exc_info:
+        module_config["test"] = charonload.Config(
+            project_directory,
+        )
+
+    assert exc_info.type is ValueError
+
+
+@pytest.mark.parametrize("environ_value", _true_values())
+def test_force_stubs_invalid_ok_true(shared_datadir: pathlib.Path, environ_value: str) -> None:
+    p = multiprocessing.get_context("spawn").Process(
+        target=_force_stubs_invalid_ok,
+        args=(
+            shared_datadir,
+            environ_value,
+            False,
+            True,
+        ),
+    )
+
+    p.start()
+    p.join()
+    assert p.exitcode == 0
+
+
+@pytest.mark.parametrize("environ_value", _false_values())
+def test_force_stubs_invalid_ok_false(shared_datadir: pathlib.Path, environ_value: str) -> None:
+    p = multiprocessing.get_context("spawn").Process(
+        target=_force_stubs_invalid_ok,
+        args=(
+            shared_datadir,
+            environ_value,
+            True,
+            False,
+        ),
+    )
+
+    p.start()
+    p.join()
+    assert p.exitcode == 0
+
+
+@pytest.mark.parametrize("environ_value", _error_values())
+def test_force_stubs_invalid_ok_error(shared_datadir: pathlib.Path, environ_value: str) -> None:
+    p = multiprocessing.get_context("spawn").Process(
+        target=_force_stubs_invalid_ok_error,
+        args=(
+            shared_datadir,
+            environ_value,
+        ),
+    )
+
+    p.start()
+    p.join()
+    assert p.exitcode == 0
+
+
+def _force_verbose(
+    shared_datadir: pathlib.Path,
+    environ_value: str,
+    value: bool,  # noqa: FBT001
+    expected_value: bool,  # noqa: FBT001
+) -> None:
+    os.environ["CHARONLOAD_FORCE_VERBOSE"] = environ_value
+
+    project_directory = shared_datadir / "torch_cpu"
+
+    module_config = charonload.ConfigDict()
+    module_config["test"] = charonload.Config(
+        project_directory,
+        verbose=value,
+    )
+    config = module_config["test"]
+
+    assert config.verbose == expected_value
+
+
+def _force_verbose_error(shared_datadir: pathlib.Path, environ_value: str) -> None:
+    os.environ["CHARONLOAD_FORCE_VERBOSE"] = environ_value
+
+    project_directory = shared_datadir / "torch_cpu"
+
+    module_config = charonload.ConfigDict()
+    with pytest.raises(ValueError) as exc_info:
+        module_config["test"] = charonload.Config(
+            project_directory,
+        )
+
+    assert exc_info.type is ValueError
+
+
+@pytest.mark.parametrize("environ_value", _true_values())
+def test_force_verbose_true(shared_datadir: pathlib.Path, environ_value: str) -> None:
+    p = multiprocessing.get_context("spawn").Process(
+        target=_force_verbose,
+        args=(
+            shared_datadir,
+            environ_value,
+            False,
+            True,
+        ),
+    )
+
+    p.start()
+    p.join()
+    assert p.exitcode == 0
+
+
+@pytest.mark.parametrize("environ_value", _false_values())
+def test_force_verbose_false(shared_datadir: pathlib.Path, environ_value: str) -> None:
+    p = multiprocessing.get_context("spawn").Process(
+        target=_force_verbose,
+        args=(
+            shared_datadir,
+            environ_value,
+            True,
+            False,
+        ),
+    )
+
+    p.start()
+    p.join()
+    assert p.exitcode == 0
+
+
+@pytest.mark.parametrize("environ_value", _error_values())
+def test_force_verbose_error(shared_datadir: pathlib.Path, environ_value: str) -> None:
+    p = multiprocessing.get_context("spawn").Process(
+        target=_force_verbose_error,
+        args=(
+            shared_datadir,
+            environ_value,
+        ),
+    )
+
+    p.start()
+    p.join()
+    assert p.exitcode == 0
