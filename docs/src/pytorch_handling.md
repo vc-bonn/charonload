@@ -40,6 +40,16 @@ Set required PIC flag for linking.
 
 ::::
 
+::::{grid-item-card}
+:link: pytorch_handling/cuda_flags
+:link-type: doc
+
+**CUDA Flags**
+^^^
+Set required CUDA flags for parents and siblings.
+
+::::
+
 :::::
 
 
@@ -49,4 +59,5 @@ Set required PIC flag for linking.
 pytorch_handling/cpp_standard
 pytorch_handling/cpp11_abi
 pytorch_handling/position_independent_code
+pytorch_handling/cuda_flags
 ```

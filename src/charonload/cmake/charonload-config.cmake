@@ -81,9 +81,25 @@ if(charonload_FIND_QUIETLY)
     set(CUDNN_FIND_QUIETLY 1)
 endif()
 
+# Back up CUDA_NVCC_FLAGS for later restoring
+set(CHARONLOAD_CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS})
+
 find_dependency(Torch)
 
+list(POP_BACK CMAKE_MESSAGE_INDENT)
+
 if(Torch_FOUND)
+    # 1. CUDA flag patching
+    if(NOT CHARONLOAD_CUDA_NVCC_FLAGS STREQUAL CUDA_NVCC_FLAGS AND TARGET torch_cuda)
+        # Use modified CUDA_NVCC_FLAGS
+        target_compile_options(torch_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${CUDA_NVCC_FLAGS}>)
+
+        # Restore CUDA_NVCC_FLAGS
+        set(CUDA_NVCC_FLAGS ${CHARONLOAD_CUDA_NVCC_FLAGS})
+        message(STATUS "Patched target \"torch_cuda\" with modified \"CUDA_NVCC_FLAGS\" settings and rolled back the variable modifications.")
+    endif()
+
+    # 2. Python bindings library
     get_target_property(TORCH_LIBRARY_LOCATION torch LOCATION)
     get_filename_component(TORCH_LIB_SEARCH_PATH ${TORCH_LIBRARY_LOCATION} DIRECTORY)
 
@@ -102,7 +118,8 @@ if(Torch_FOUND)
     endif()
 endif()
 
-list(POP_BACK CMAKE_MESSAGE_INDENT)
+# Clean up backup variable
+unset(CHARONLOAD_CUDA_NVCC_FLAGS)
 
 
 include("${CMAKE_CURRENT_LIST_DIR}/torch/cxx_standard.cmake")
