@@ -1,6 +1,6 @@
 [project]
 name = "charonload"
-version = "0.1.4"
+version = "0.2.0"
 authors = [{ name = "Patrick Stotko", email = "stotko@cs.uni-bonn.de" }]
 description = "Develop C++/CUDA extensions with PyTorch like Python scripts"
 readme = "README.md"

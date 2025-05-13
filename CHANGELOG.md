@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.2.0] - 2025-05-13
+
+### Added
+
+- Propagate PyTorch CUDA flags via CMake target [@stotko](https://github.com/stotko) ([\#57](https://github.com/vc-bonn/charonload/pull/57))
+- Document JIT compiling and PyTorch handling behavior [@stotko](https://github.com/stotko) ([\#56](https://github.com/vc-bonn/charonload/pull/56))
+- Support global configuration overrides with environment variables [@stotko](https://github.com/stotko) ([\#55](https://github.com/vc-bonn/charonload/pull/55))
+- Add Python 3.13 support [@stotko](https://github.com/stotko) ([\#47](https://github.com/vc-bonn/charonload/pull/47))
+
+### Changed
+
+- Also clean if torch version has changed [@stotko](https://github.com/stotko) ([\#53](https://github.com/vc-bonn/charonload/pull/53))
+- Use extension name when determining default build directory [@stotko](https://github.com/stotko) ([\#49](https://github.com/vc-bonn/charonload/pull/49))
+- Defer resolving configurations until inserted into dict [@stotko](https://github.com/stotko) ([\#48](https://github.com/vc-bonn/charonload/pull/48))
+
+### Removed
+
+- Drop Python 3.8 support [@stotko](https://github.com/stotko) ([\#46](https://github.com/vc-bonn/charonload/pull/46))
+
+
 ## [0.1.4] - 2024-11-08
 
 ### Fixed
@@ -61,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial version
 
+[0.2.0]: https://github.com/vc-bonn/charonload/compare/v0.1.4...v0.2.0
 [0.1.4]: https://github.com/vc-bonn/charonload/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/vc-bonn/charonload/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/vc-bonn/charonload/compare/v0.1.1...v0.1.2
