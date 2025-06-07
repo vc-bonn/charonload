@@ -123,7 +123,6 @@ def _load(module_name: str, config: ResolvedConfig) -> None:
 
 
 class _JITCompileStep(ABC):
-    exception_cls = type(None)
     step_name = "<None>"
 
     def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
@@ -150,7 +149,6 @@ class _JITCompileStep(ABC):
 
 
 class _CleanStep(_JITCompileStep):
-    exception_cls = type(None)
     step_name = "Clean"
 
     def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
@@ -236,7 +234,6 @@ class _CleanStep(_JITCompileStep):
 
 
 class _InitializeStep(_JITCompileStep):
-    exception_cls = type(None)
     step_name = "Initialize"
 
     def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
@@ -255,7 +252,6 @@ class _InitializeStep(_JITCompileStep):
 
 
 class _CMakeConfigureStep(_JITCompileStep):
-    exception_cls = CMakeConfigureError
     step_name = "CMake Configure"
 
     def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
@@ -301,7 +297,7 @@ class _CMakeConfigureStep(_JITCompileStep):
         self.cache["cmake_configure_command"] = configure_command
         self.cache["status_cmake_configure"] = status
         if status == _StepStatus.FAILED:
-            raise self.exception_cls(log)
+            raise CMakeConfigureError(log)
 
     def _cmake_generator(self: Self) -> list[str]:
         return ["-G", "Ninja Multi-Config"] if platform.system() != "Windows" else []
@@ -314,7 +310,6 @@ class _CMakeConfigureStep(_JITCompileStep):
 
 
 class _BuildStep(_JITCompileStep):
-    exception_cls = BuildError
     step_name = "Build"
 
     def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
@@ -351,11 +346,10 @@ class _BuildStep(_JITCompileStep):
 
         self.cache["status_build"] = status
         if status == _StepStatus.FAILED:
-            raise self.exception_cls(log)
+            raise BuildError(log)
 
 
 class _StubGenerationStep(_JITCompileStep):
-    exception_cls = StubGenerationError
     step_name = "Stub Generation"
 
     def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:
@@ -417,7 +411,7 @@ class _StubGenerationStep(_JITCompileStep):
         self.cache["checksum"] = new_checksum
         self.cache["status_stub_generation"] = status
         if status == _StepStatus.FAILED:
-            raise self.exception_cls(log)
+            raise StubGenerationError(log)
 
     def _windows_dll_directories(self: Self) -> list[str]:
         windows_dll_directories: str = self.cache["windows_dll_directories"]
@@ -433,7 +427,6 @@ class _StubGenerationStep(_JITCompileStep):
 
 
 class _ImportPathStep(_JITCompileStep):
-    exception_cls = type(None)
     step_name = "Import Path"
 
     def __init__(self: Self, module_name: str, config: ResolvedConfig, step_number: tuple[int, int]) -> None:

@@ -46,7 +46,7 @@ def main() -> None:
     # Patch list of command line argument globally as this list cannot directly be passed to pybind11-stubgen
     sys.argv = [sys.argv[0], *original_args]
 
-    pybind11_stubgen.main()  # type: ignore[no-untyped-call]
+    pybind11_stubgen.main()
 
 
 if __name__ == "__main__":  # pragma: no cover
