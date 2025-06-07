@@ -5,6 +5,7 @@ import importlib
 import importlib.util
 import io
 import multiprocessing
+import os
 import pathlib
 import platform
 import shutil
@@ -85,6 +86,43 @@ def test_torch_cuda(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> Non
     assert t_output.device == t_input.device
     assert t_output.shape == t_input.shape
     assert torch.equal(t_output, 2 * t_input)
+
+
+def _torch_cuda_custom_archs(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
+    os.environ["TORCH_CUDA_ARCH_LIST"] = "8.0 8.6"  # Use 2 different archs
+
+    project_directory = shared_datadir / "torch_cuda"
+    build_directory = tmp_path / "build"
+
+    charonload.module_config["test_torch_cuda_custom_archs"] = charonload.Config(
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+    )
+
+    import test_torch_cuda_custom_archs as test_torch
+
+    t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cuda")
+    t_output = test_torch.two_times(t_input)
+
+    assert t_output.device == t_input.device
+    assert t_output.shape == t_input.shape
+    assert torch.equal(t_output, 2 * t_input)
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
+def test_torch_cuda_custom_archs(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
+    p = multiprocessing.get_context("spawn").Process(
+        target=_torch_cuda_custom_archs,
+        args=(
+            shared_datadir,
+            tmp_path,
+        ),
+    )
+
+    p.start()
+    p.join()
+    assert p.exitcode == 0
 
 
 def test_torch_common_static(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
