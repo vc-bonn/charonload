@@ -186,7 +186,6 @@ show_missing = true
 
 [tool.mypy]
 strict = true
-plugins = ["numpy.typing.mypy_plugin"]
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 warn_return_any = true
 warn_unused_configs = true
