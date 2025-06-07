@@ -81,8 +81,9 @@ if(charonload_FIND_QUIETLY)
     set(CUDNN_FIND_QUIETLY 1)
 endif()
 
-# Back up CUDA_NVCC_FLAGS for later restoring
+# Back up CUDA_NVCC_FLAGS and CMAKE_CUDA_FLAGS for later restoring
 set(CHARONLOAD_CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS})
+set(CHARONLOAD_CMAKE_CUDA_FLAGS ${CMAKE_CUDA_FLAGS})
 
 find_dependency(Torch)
 
@@ -90,13 +91,22 @@ list(POP_BACK CMAKE_MESSAGE_INDENT)
 
 if(Torch_FOUND)
     # 1. CUDA flag patching
-    if(NOT CHARONLOAD_CUDA_NVCC_FLAGS STREQUAL CUDA_NVCC_FLAGS AND TARGET torch_cuda)
-        # Use modified CUDA_NVCC_FLAGS
-        target_compile_options(torch_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${CUDA_NVCC_FLAGS}>)
+    message(STATUS "${CUDA_NVCC_FLAGS}")
+    message(STATUS "${CHARONLOAD_CUDA_NVCC_FLAGS}")
+    if((NOT CHARONLOAD_CUDA_NVCC_FLAGS STREQUAL CUDA_NVCC_FLAGS OR NOT CHARONLOAD_CUDA_NVCC_FLAGS STREQUAL CUDA_NVCC_FLAGS) AND TARGET torch_cuda)
+        # Extract modified flags
+        string(REPLACE "${CHARONLOAD_CUDA_NVCC_FLAGS}" "" CHARONLOAD_CUDA_NVCC_FLAGS_MODIFIED "${CUDA_NVCC_FLAGS}")
+        string(REPLACE ";" " " CHARONLOAD_CUDA_NVCC_FLAGS_MODIFIED "${CHARONLOAD_CUDA_NVCC_FLAGS_MODIFIED}")
+        string(STRIP "${CHARONLOAD_CUDA_NVCC_FLAGS_MODIFIED}" CHARONLOAD_CUDA_NVCC_FLAGS_MODIFIED)
 
-        # Restore CUDA_NVCC_FLAGS
+        # Use modified CUDA_NVCC_FLAGS
+        target_compile_options(torch_cuda INTERFACE "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:${CHARONLOAD_CUDA_NVCC_FLAGS_MODIFIED}>")
+        unset(CHARONLOAD_CUDA_NVCC_FLAGS_MODIFIED)
+
+        # Restore CUDA_NVCC_FLAGS and CMAKE_CUDA_FLAGS
         set(CUDA_NVCC_FLAGS ${CHARONLOAD_CUDA_NVCC_FLAGS})
-        message(STATUS "Patched target \"torch_cuda\" with modified \"CUDA_NVCC_FLAGS\" settings and rolled back the variable modifications.")
+        set(CMAKE_CUDA_FLAGS ${CHARONLOAD_CMAKE_CUDA_FLAGS})
+        message(STATUS "Patched target \"torch_cuda\" with modified \"CUDA_NVCC_FLAGS\"/\"CMAKE_CUDA_FLAGS\" settings and rolled back the variable modifications.")
     endif()
 
     # 2. Python bindings library
@@ -120,6 +130,7 @@ endif()
 
 # Clean up backup variable
 unset(CHARONLOAD_CUDA_NVCC_FLAGS)
+unset(CHARONLOAD_CMAKE_CUDA_FLAGS)
 
 
 include("${CMAKE_CURRENT_LIST_DIR}/torch/cxx_standard.cmake")
