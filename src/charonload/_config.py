@@ -253,7 +253,7 @@ class ConfigDict(UserDict[str, ResolvedConfig]):
             verbose=self._str_to_bool(os.environ.get("CHARONLOAD_FORCE_VERBOSE", default=config.verbose)),
         )
 
-    def _str_to_bool(self: Self, s: str | bool) -> bool:
+    def _str_to_bool(self: Self, s: str | bool) -> bool:  # noqa: FBT001
         if isinstance(s, bool):
             return s
 

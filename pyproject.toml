@@ -136,10 +136,11 @@ typing-modules = ["charonload._compat.typing"]
     "D", # pydocstyle
 ]
 "tests/*" = [
-    "D",     # pydocstyle
-    "S101",  # assert-used
-    "INP",   # flake8-no-pep420
-    "PT011", # raises-too-broad
+    "D",       # pydocstyle
+    "S101",    # assert-used
+    "INP",     # flake8-no-pep420
+    "PT011",   # raises-too-broad
+    "PLC0415", # import-outside-top-level
 ]
 "docs/conf.py" = [
     "D100", # undocumented-public-module

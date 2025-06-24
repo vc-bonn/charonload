@@ -704,7 +704,7 @@ def test_torch_clean_build_compatible_version(shared_datadir: pathlib.Path, tmp_
     (build_directory / "charonload").mkdir(parents=True, exist_ok=True)
     dirty_file.touch()
     with (build_directory / "charonload" / "version.txt").open("w") as f:
-        f.write(".".join(charonload.__version__.split(".")[:-1] + ["9999"]))
+        f.write(".".join([*charonload.__version__.split(".")[:-1], "9999"]))
 
     assert dirty_file.exists()
 
