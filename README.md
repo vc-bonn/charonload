@@ -38,7 +38,7 @@ CharonLoad reduces the burden to start writing and experimenting with custom GPU
 
 ## Installation
 
-CharonLoad requires **Python >=3.9** and can be installed from PyPI:
+CharonLoad requires **Python >=3.10** and can be installed from PyPI:
 
 ```sh
 pip install charonload

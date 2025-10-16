@@ -11,7 +11,7 @@ import sys
 import sysconfig
 import tempfile
 from collections import UserDict
-from dataclasses import dataclass
+from dataclasses import KW_ONLY, dataclass
 from typing import TYPE_CHECKING
 
 import colorama
@@ -22,7 +22,7 @@ if TYPE_CHECKING:  # pragma: no cover
 colorama.just_fix_windows_console()
 
 
-@dataclass(init=False)  # Python 3.10+: Use "_: KW_ONLY"
+@dataclass
 class Config:
     """
     Set of user-specified configuration options for setting up the import logic of :class:`JITCompileFinder`.
@@ -33,14 +33,16 @@ class Config:
     project_directory: pathlib.Path | str
     """The absolute path to the root directory of the C++/CUDA extension containing the root ``CMakeLists.txt`` file."""
 
-    build_directory: pathlib.Path | str | None
+    build_directory: pathlib.Path | str | None = None
     """
     An optional absolute path to a build directory.
 
     If not specified, the build will be placed in the temporary directory of the operating system.
     """
 
-    clean_build: bool
+    _: KW_ONLY
+
+    clean_build: bool = False
     """
     Whether to remove all cached files of previous builds from the build directory.
 
@@ -53,13 +55,13 @@ class Config:
       :class:`ResolvedConfig`.
     """
 
-    build_type: str
+    build_type: str = "RelWithDebInfo"
     """The build type passed to CMake to compile the extension."""
 
-    cmake_options: dict[str, str] | None
+    cmake_options: dict[str, str] | None = None
     """Additional CMake options to pass to the project when JIT compiling."""
 
-    stubs_directory: pathlib.Path | str | None
+    stubs_directory: pathlib.Path | str | None = None
     """
     An optional absolute path to the directory where stub files of the extension should be generated.
 
@@ -68,7 +70,7 @@ class Config:
     if set to ``None``.
     """
 
-    stubs_invalid_ok: bool
+    stubs_invalid_ok: bool = False
     """
     Whether to accept invalid stubs and skip raising an error.
 
@@ -79,7 +81,7 @@ class Config:
       :class:`ResolvedConfig`.
     """
 
-    verbose: bool
+    verbose: bool = False
     """
     Whether to enable printing the full log of the JIT compilation.
 
@@ -92,35 +94,16 @@ class Config:
       :class:`ResolvedConfig`.
     """
 
-    def __init__(
-        self: Self,
-        project_directory: pathlib.Path | str,
-        build_directory: pathlib.Path | str | None = None,
-        *,
-        clean_build: bool = False,
-        build_type: str = "RelWithDebInfo",
-        cmake_options: dict[str, str] | None = None,
-        stubs_directory: pathlib.Path | str | None = None,
-        stubs_invalid_ok: bool = False,
-        verbose: bool = False,
-    ) -> None:
-        self.project_directory = project_directory
-        self.build_directory = build_directory
-        self.clean_build = clean_build
-        self.build_type = build_type
-        self.cmake_options = cmake_options
-        self.stubs_directory = stubs_directory
-        self.stubs_invalid_ok = stubs_invalid_ok
-        self.verbose = verbose
 
-
-@dataclass(init=False)  # Python 3.10+: Use "kw_only=True"
+@dataclass
 class ResolvedConfig:
     """
     Set of resolved configuration options that is **actually used** in the import logic of :class:`JITCompileFinder`.
 
     This has been resolved from :class:`Config` and from the environment variables.
     """
+
+    _: KW_ONLY
 
     full_project_directory: pathlib.Path
     """The full absolute path to the project directory."""
@@ -145,27 +128,6 @@ class ResolvedConfig:
 
     verbose: bool
     """Flag to enable printing the full log of the JIT compilation."""
-
-    def __init__(
-        self: Self,
-        *,
-        full_project_directory: pathlib.Path,
-        full_build_directory: pathlib.Path,
-        clean_build: bool,
-        build_type: str,
-        cmake_options: dict[str, str],
-        full_stubs_directory: pathlib.Path | None,
-        stubs_invalid_ok: bool,
-        verbose: bool,
-    ) -> None:
-        self.full_project_directory = full_project_directory
-        self.full_build_directory = full_build_directory
-        self.clean_build = clean_build
-        self.build_type = build_type
-        self.cmake_options = cmake_options
-        self.full_stubs_directory = full_stubs_directory
-        self.stubs_invalid_ok = stubs_invalid_ok
-        self.verbose = verbose
 
 
 class ConfigDict(UserDict[str, ResolvedConfig]):

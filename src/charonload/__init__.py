@@ -20,7 +20,7 @@ PyTorch. A typical example on how to use this package is shown in the following:
 
 import sys
 
-required_version = (3, 8)
+required_version = (3, 10)
 
 if sys.version_info[:2] < required_version:  # pragma: no cover
     msg = "%s requires Python %d.%d+" % (__package__, *required_version)  # noqa: UP031

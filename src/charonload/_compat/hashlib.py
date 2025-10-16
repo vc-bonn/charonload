@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import sys
 from hashlib import *  # noqa: F403
-from typing import TYPE_CHECKING, BinaryIO, Callable
+from typing import TYPE_CHECKING, BinaryIO
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from hashlib import _Hash
 
 
