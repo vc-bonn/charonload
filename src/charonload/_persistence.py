@@ -6,12 +6,13 @@ import operator
 import pathlib
 import sys
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from ._errors import _SerializerNotConnectedError
 
 if TYPE_CHECKING:  # pragma: no cover
     import enum
+    from collections.abc import Callable
 
     from ._compat.typing import Self
 

@@ -4,9 +4,10 @@ version = "0.2.1"
 authors = [{ name = "Patrick Stotko", email = "stotko@cs.uni-bonn.de" }]
 description = "Develop C++/CUDA extensions with PyTorch like Python scripts"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "cmake>=3.27",
+    'dlltracer ; platform_system == "Windows"',
     'ninja ; platform_system != "Windows"',
     "filelock",
     "torch",
@@ -21,7 +22,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: C++",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -92,7 +92,7 @@ line-length = 120
 [tool.isort]
 profile = "black"
 multi_line_output = 3
-py_version = 39
+py_version = 310
 
 
 [tool.docformatter]
