@@ -1,6 +1,6 @@
 #include <ATen/Dispatch.h>
+#include <ATen/cuda/Exceptions.h>
 #include <ATen/ops/zeros_like.h>
-#include <c10/cuda/CUDAException.h>
 
 template <class T>
 __global__ void
@@ -26,7 +26,8 @@ two_times(const at::Tensor& input)
                               two_times_kernel<<<num_blocks, block_size>>>(input.data_ptr<scalar_t>(),
                                                                            output.data_ptr<scalar_t>(),
                                                                            input.numel());
-                              C10_CUDA_KERNEL_LAUNCH_CHECK();
+                              AT_CUDA_CHECK(cudaGetLastError());
+                              AT_CUDA_CHECK(cudaDeviceSynchronize());
                           });
 
     return output;
