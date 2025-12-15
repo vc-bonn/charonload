@@ -99,9 +99,43 @@ function(charonload_set_position_independent_code name)
 endfunction()
 
 
-function(charonload_set_torch_cxx_standard name)
-    if(NOT $CACHE{CHARONLOAD_TORCH_STANDARD} STREQUAL "NOTFOUND")
-        target_compile_features(${name} PUBLIC cxx_std_$CACHE{CHARONLOAD_TORCH_STANDARD})
+function(charonload_select_cudart_library name)
+    if(CHARONLOAD_TORCH_CUDART_STATIC)
+        set(CHARONLOAD_CUDA_RUNTIME_LIBRARY Static)
+        set(CHARONLOAD_CUDART_CONFLICTING_TARGET "CUDA::cudart")
+        set(CHARONLOAD_CUDART_REPLACEMENT_TARGET "CUDA::cudart_static")
+    elseif(CHARONLOAD_TORCH_CUDART_SHARED)
+        set(CHARONLOAD_CUDA_RUNTIME_LIBRARY Shared)
+        set(CHARONLOAD_CUDART_CONFLICTING_TARGET "CUDA::cudart_static")
+        set(CHARONLOAD_CUDART_REPLACEMENT_TARGET "CUDA::cudart")
+    else()
+        return()
+    endif()
+
+    get_target_property(NAME_CUDART ${name} CUDA_RUNTIME_LIBRARY)
+    if(NOT NAME_CUDART MATCHES "NOTFOUND" AND NOT NAME_CUDART STREQUAL CHARONLOAD_CUDA_RUNTIME_LIBRARY)
+        set_target_properties(${name} PROPERTIES CUDA_RUNTIME_LIBRARY ${CHARONLOAD_CUDA_RUNTIME_LIBRARY})
+        message(STATUS "Set property CUDA_RUNTIME_LIBRARY=${CHARONLOAD_CUDA_RUNTIME_LIBRARY} to target \"${name}\"")
+    endif()
+
+    get_target_property(NAME_DEPENDENCIES ${lib} INTERFACE_LINK_LIBRARIES)
+    list(TRANSFORM NAME_DEPENDENCIES
+         REPLACE ${CHARONLOAD_CUDART_CONFLICTING_TARGET} ${CHARONLOAD_CUDART_REPLACEMENT_TARGET}
+         OUTPUT_VARIABLE NAME_ADJUSTED_DEPENDENCIES
+    )
+    if(NOT NAME_ADJUSTED_DEPENDENCIES STREQUAL NAME_DEPENDENCIES)
+        set_target_properties(${name} PROPERTIES INTERFACE_LINK_LIBRARIES "${NAME_ADJUSTED_DEPENDENCIES}")
+        message(STATUS "Replaced interface dependency (${CHARONLOAD_CUDART_CONFLICTING_TARGET} -> ${CHARONLOAD_CUDART_REPLACEMENT_TARGET}) in target \"${name}\"")
+    endif()
+
+    get_target_property(NAME_DEPENDENCIES ${lib} LINK_LIBRARIES)
+    list(TRANSFORM NAME_DEPENDENCIES
+         REPLACE ${CHARONLOAD_CUDART_CONFLICTING_TARGET} ${CHARONLOAD_CUDART_REPLACEMENT_TARGET}
+         OUTPUT_VARIABLE NAME_ADJUSTED_DEPENDENCIES
+    )
+    if(NOT NAME_ADJUSTED_DEPENDENCIES STREQUAL NAME_DEPENDENCIES)
+        set_target_properties(${name} PROPERTIES LINK_LIBRARIES "${NAME_ADJUSTED_DEPENDENCIES}")
+        message(STATUS "Replaced  private  dependency (${CHARONLOAD_CUDART_CONFLICTING_TARGET} -> ${CHARONLOAD_CUDART_REPLACEMENT_TARGET}) in target \"${name}\"")
     endif()
 endfunction()
 
@@ -143,9 +177,24 @@ function(charonload_add_torch_library name)
     endif()
 
     target_link_libraries(${name} PUBLIC charonload::torch)
+
+    # - CXX11 ABI: Implicitly set via interface property of charonload::torch
+    # <no-operation>
+
+    # - Position-Independent Code
     set_target_properties(${name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-    charonload_set_torch_cxx_standard(${name})
+    # - CXX Standard
+    if(NOT $CACHE{CHARONLOAD_TORCH_STANDARD} STREQUAL "NOTFOUND")
+        target_compile_features(${name} PUBLIC cxx_std_$CACHE{CHARONLOAD_TORCH_STANDARD})
+    endif()
+
+    # - cudart library
+    if(CHARONLOAD_TORCH_CUDART_STATIC)
+        set_target_properties(${name} PROPERTIES CUDA_RUNTIME_LIBRARY Static)
+    elseif(CHARONLOAD_TORCH_CUDART_SHARED)
+        set_target_properties(${name} PROPERTIES CUDA_RUNTIME_LIBRARY Shared)
+    endif()
 
     # Required for charonload_patch_dependencies() and charonload_check_binding_target()
     set_target_properties(${name} PROPERTIES CHARONLOAD_IS_HANDLED_TARGET TRUE)
@@ -154,6 +203,7 @@ function(charonload_add_torch_library name)
         list(APPEND PATCH_FUNCTIONS "charonload_add_torch_cxx11_abi_compile_definition")
     endif()
     list(APPEND PATCH_FUNCTIONS "charonload_set_position_independent_code")
+    list(APPEND PATCH_FUNCTIONS "charonload_select_cudart_library")
     cmake_language(EVAL CODE "cmake_language(DEFER DIRECTORY \"${CMAKE_SOURCE_DIR}\" CALL charonload_patch_dependencies \"${name}\" \"${PATCH_FUNCTIONS}\")")
 
     if(arg_MODULE)

@@ -165,6 +165,56 @@ def test_torch_common_shared(shared_datadir: pathlib.Path, tmp_path: pathlib.Pat
     assert torch.equal(t_output, 2 * t_input)
 
 
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
+def test_torch_cudart_shared(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
+    project_directory = shared_datadir / "torch_cudart_shared"
+    build_directory = tmp_path / "build"
+
+    charonload.module_config["test_torch_cudart_shared"] = charonload.Config(
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+    )
+
+    import test_torch_cudart_shared as test_torch
+
+    t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cpu")
+    t_output = test_torch.two_times(t_input)
+
+    assert t_output.device == t_input.device
+    assert t_output.shape == t_input.shape
+    assert torch.equal(t_output, 2 * t_input)
+
+    assert test_torch.numel_times_multi_processor_count(
+        t_input
+    ) == test_torch.numel_times_multi_processor_count_aliased(t_input)
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
+def test_torch_cudart_static(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
+    project_directory = shared_datadir / "torch_cudart_static"
+    build_directory = tmp_path / "build"
+
+    charonload.module_config["test_torch_cudart_static"] = charonload.Config(
+        project_directory,
+        build_directory,
+        stubs_directory=VSCODE_STUBS_DIRECTORY,
+    )
+
+    import test_torch_cudart_static as test_torch
+
+    t_input = torch.randint(0, 10, size=(3, 3, 3), dtype=torch.float, device="cpu")
+    t_output = test_torch.two_times(t_input)
+
+    assert t_output.device == t_input.device
+    assert t_output.shape == t_input.shape
+    assert torch.equal(t_output, 2 * t_input)
+
+    assert test_torch.numel_times_multi_processor_count(
+        t_input
+    ) == test_torch.numel_times_multi_processor_count_aliased(t_input)
+
+
 def test_torch_cxx_standard(shared_datadir: pathlib.Path, tmp_path: pathlib.Path) -> None:
     project_directory = shared_datadir / "torch_cxx_standard"
     build_directory = tmp_path / "build"
