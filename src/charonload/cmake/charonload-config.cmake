@@ -142,6 +142,9 @@ charonload_detect_cxx11_abi()
 include("${CMAKE_CURRENT_LIST_DIR}/torch/cuda_version.cmake")
 charonload_detect_cuda_version()
 
+include("${CMAKE_CURRENT_LIST_DIR}/torch/cudart_type.cmake")
+charonload_detect_cudart_type()
+
 
 include("${CMAKE_CURRENT_LIST_DIR}/torch/add_torch_library.cmake")
 

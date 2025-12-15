@@ -50,6 +50,16 @@ Set required CUDA flags for parents and siblings.
 
 ::::
 
+::::{grid-item-card}
+:link: pytorch_handling/cuda_runtime_library
+:link-type: doc
+
+**CUDA Runtime Library**
+^^^
+Set correct CUDA runtime library for linking.
+
+::::
+
 :::::
 
 
@@ -60,4 +70,5 @@ pytorch_handling/cpp_standard
 pytorch_handling/cpp11_abi
 pytorch_handling/position_independent_code
 pytorch_handling/cuda_flags
+pytorch_handling/cuda_runtime_library
 ```
