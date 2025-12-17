@@ -8,6 +8,10 @@ import sys
 
 import pybind11_stubgen
 
+# This makes sure that PyTorch is imported beforehand. Otherwise, generating stubs for functions, which internally use
+# Torch on the C++ side, may lead to unexpected behavior or errors.
+import torch  # noqa: F401
+
 
 def _make_importable(full_extension_path: pathlib.Path, windows_dll_directories: str) -> None:  # pragma: no cover
     full_extension_directory = str(full_extension_path.parent)
