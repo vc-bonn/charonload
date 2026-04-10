@@ -9,6 +9,13 @@ function(charonload_detect_torch_cxx_standard)
         list(APPEND KNOWN_CXX_STANDARDS 20)
     endif()
 
+    # PyTorch may enable the CUDA language, so ensure that policy CMP0104 will not throw an error
+    if(CMAKE_CUDA_ARCHITECTURES)
+        set(CHARONLOAD_CMAKE_CUDA_ARCHITECTURES ${CMAKE_CUDA_ARCHITECTURES})
+    else()
+        set(CHARONLOAD_CMAKE_CUDA_ARCHITECTURES OFF)
+    endif()
+
     charonload_message(CHECK_START "Detecting minimum C++ standard for Torch ...")
     list(APPEND CMAKE_MESSAGE_INDENT "  ")
     foreach(std IN LISTS KNOWN_CXX_STANDARDS)
@@ -21,6 +28,7 @@ function(charonload_detect_torch_cxx_standard)
                     CMAKE_FLAGS
                         "-DCMAKE_MESSAGE_LOG_LEVEL=ERROR"
                         "-DCHARONLOAD_TORCH_STANDARD=${std}"
+                        "-DCMAKE_CUDA_ARCHITECTURES=${CHARONLOAD_CMAKE_CUDA_ARCHITECTURES}"
                         "-DTorch_DIR=${Torch_DIR}"
                     LOG_DESCRIPTION "Checking C++${std} standard for Torch"
         )
